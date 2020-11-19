@@ -1,0 +1,4 @@
+application:
+  afiches:
+    endpoints:
+      - http://localhost:8080

@@ -1,0 +1,4 @@
+application:
+  positions:
+    endpoints:
+      - http://localhost:8080
