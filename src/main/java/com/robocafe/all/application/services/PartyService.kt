@@ -78,5 +78,12 @@ class PartyService @Autowired constructor(
         repository.save(party)
     }
 
-
+    fun changeMemberBalance(partyId: String, memberId: String, amount: Double) {
+        if (!personService.personWithActivePartyExists(memberId, partyId)) {
+            throw PersonNotInParty()
+        }
+        val party = findNotEndedParty(partyId)
+        party.changePersonBalance(memberId, amount)
+        repository.save(party)
+    }
 }

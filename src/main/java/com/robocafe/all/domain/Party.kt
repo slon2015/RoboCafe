@@ -10,7 +10,8 @@ import kotlin.collections.HashSet
 class Person(@field:Id val id: String,
              @field:JoinColumn(name = "party_id")
              @field:ManyToOne
-             val party: Party)
+             val party: Party,
+             var balance: Double = 0.0)
 
 @Entity
 class Party(@field:Id val id: String, val tableId: String, val maxMembers: Int) : AbstractAggregateRoot<Party?>() {
@@ -19,6 +20,8 @@ class Party(@field:Id val id: String, val tableId: String, val maxMembers: Int) 
     var endTime: Instant? = null
     val isMemberless
         get() = members.size == 0
+    val balance
+        get() = members.map { it.balance }.sum()
 
     constructor(id: String, tableId: String, maxMembers: Int, memberCount: Int) : this(id, tableId, maxMembers) {
         var i = 0
@@ -31,20 +34,30 @@ class Party(@field:Id val id: String, val tableId: String, val maxMembers: Int) 
 
     fun isEnded() = endTime == null
 
-    fun joinPersonToParty(id: String) {
-        members.add(Person(id, this))
-        registerEvent(MemberJoinToParty(this.id, id))
+    fun joinPersonToParty(memberId: String) {
+        members.add(Person(memberId, this))
+        registerEvent(MemberJoinToParty(this.id, memberId))
     }
 
-    fun removePersonFromParty(id: String) {
-        members.removeIf { p: Person -> p.id == id }
-        registerEvent(MemberLeaveParty(this.id, id))
+    fun removePersonFromParty(memberId: String) {
+        members.removeIf { p: Person -> p.id == memberId }
+        registerEvent(MemberLeaveParty(this.id, memberId))
     }
 
     fun endParty() {
         endTime = Instant.now()
         registerEvent(PartyEnded(id))
     }
+
+    fun changePersonBalance(memberId: String, amount: Double) {
+        val member = members.firstOrNull { it.id == memberId }
+        if (member != null) {
+            member.balance += amount
+            registerEvent(MemberBalanceChanged(id, memberId, amount))
+        }
+    }
+
+
 
     init {
         registerEvent(PartyStarted(id, tableId))
