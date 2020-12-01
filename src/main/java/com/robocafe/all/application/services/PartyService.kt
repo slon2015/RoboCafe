@@ -10,25 +10,23 @@ import org.springframework.stereotype.Service
 @Service
 class PartyService @Autowired constructor(
         private val repository: PartyRepository,
-        private val tableService: TableService,
+//        private val tableService: TableService,
         private val personService: PersonService
 ) {
 
+    private companion object Dsl {
+        infix fun Party.operate(operation: Party.() -> Unit) {
+            operation(this)
+        }
+    }
+
     @Throws(TableNotFound::class, TableNotFree::class, TablePersonsCountLowerThanPartyMembersCount::class)
-    fun startParty(tableId: String, partyId: String, membersCount: Int?): Party {
+    fun startParty(tableId: String, partyId: String, maxMembersCount: Int, membersCount: Int): Party {
         val selectedTable = tableService.getTableInfo(tableId)
         if (selectedTable.status != TableStatus.FREE) {
             throw TableNotFree()
         }
-        val newParty = if (membersCount != null) {
-            if (selectedTable.maxPersons < membersCount) {
-                throw TablePersonsCountLowerThanPartyMembersCount()
-            }
-            Party(partyId, tableId, selectedTable.maxPersons, membersCount)
-        }
-        else {
-            Party(partyId, tableId, selectedTable.maxPersons)
-        }
+        val newParty = Party(partyId, tableId, maxMembersCount, membersCount)
         return repository.save(newParty)
     }
 
