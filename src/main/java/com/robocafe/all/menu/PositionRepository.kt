@@ -8,4 +8,5 @@ interface PositionRepository: JpaRepository<Position, String> {
     fun findAllDistinctByCategoriesIn(categories: Collection<Category>): Set<Position>
     fun findAllDistinctByCategoriesInAndIdIn(categories: Collection<Category>,
                                              ids: Collection<String>): Set<Position>
+    fun existsAllById(ids: Collection<String>): Boolean
 }

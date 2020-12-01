@@ -1,8 +1,14 @@
 package com.robocafe.all.domain
 
 import org.springframework.data.domain.AbstractAggregateRoot
+import java.util.*
 import javax.persistence.*
 import javax.persistence.Table
+
+data class OrderPositionData(
+        val menuPositionId: String,
+        val count: Int
+)
 
 enum class CloseCause {
     PAYED,
@@ -16,10 +22,16 @@ enum class OrderStatus {
     COMPLETED
 }
 
-@Embeddable
+@Entity
 class OrderPosition(
+        @field:Id
+        val id: String,
         val menuPositionId: String,
-        val count: Int
+        @field:ManyToOne(optional = false)
+        @field:JoinColumn(name = "order_id")
+        val order: Order,
+        @field:Enumerated(EnumType.STRING)
+        var orderStatus: OrderStatus = OrderStatus.WAITING
 )
 
 
@@ -27,37 +39,35 @@ class OrderPosition(
 @Table(name = "menu_order")
 class Order(
         @field:Id val id: String, val partyId: String, val personId: String?,
-        @field:ElementCollection
-        @field:CollectionTable(name = "order_positions")
-        val positions: Set<OrderPosition>,
+        positions: Set<OrderPositionData>,
         var price: Double,
-        var closed: Boolean = false,
-        @field:Enumerated(EnumType.STRING) var closeCause: CloseCause? = null
 ): AbstractAggregateRoot<Order>() {
 
+    var closed: Boolean = false
     @Enumerated(EnumType.STRING)
-    var orderStatus: OrderStatus = OrderStatus.WAITING
+    var closeCause: CloseCause? = null
+
+    @OneToMany(mappedBy = "order")
+    val positions: Set<OrderPosition> = positions.flatMap {
+        val mapped = mutableSetOf<OrderPosition>()
+        for (i in 0 .. it.count) {
+            mapped.add(OrderPosition(
+                    UUID.randomUUID().toString(),
+                    it.menuPositionId,
+                    this
+            ))
+        }
+        mapped
+    }.toSet()
 
     init {
         registerEvent(OrderCreated(id, partyId, personId,
-                positions.map { OrderPositionInfo(it) }.toSet()))
+                this.positions.map { OrderPositionInfo(it) }.toSet()))
     }
 
     fun changePrice(price: Double) {
         this.price = price
         registerEvent(OrderPriceChanged(id, price))
-    }
-
-    fun returnPaymentForOrder() {
-        closed = false
-        closeCause = null
-        registerEvent(OrderPaymentRemoved(id, price))
-    }
-
-    fun payForOrder() {
-        closed = true
-        closeCause = CloseCause.PAYED
-        registerEvent(OrderPayed(id, price))
     }
 
     fun removeOrder() {
@@ -66,21 +76,26 @@ class Order(
         registerEvent(OrderRemoved(id))
     }
 
-    fun startPreparingOrder() {
-        val oldStatus = orderStatus
-        orderStatus = OrderStatus.PREPARING
-        registerEvent(OrderStatusChanged(id, orderStatus, oldStatus))
+    private fun findPositionInOrder(positionId: String) = positions.find { it.id == positionId }!!
+
+    fun startPositionPreparing(positionId: String) {
+        val position = findPositionInOrder(positionId)
+        position.orderStatus = OrderStatus.PREPARING
+        registerEvent(PositionStartPreparing(id, position.id))
     }
 
-    fun startDeliveringOrder() {
-        val oldStatus = orderStatus
-        orderStatus = OrderStatus.DELIVERING
-        registerEvent(OrderStatusChanged(id, orderStatus, oldStatus))
+    fun preparePosition(positionId: String) {
+        val position = findPositionInOrder(positionId)
+        position.orderStatus = OrderStatus.DELIVERING
+        registerEvent(PositionDone(id, position.id))
     }
 
-    fun completeOrder() {
-        val oldStatus = orderStatus
-        orderStatus = OrderStatus.COMPLETED
-        registerEvent(OrderStatusChanged(id, orderStatus, oldStatus))
+    fun deliverPosition(positionId: String) {
+        val position = findPositionInOrder(positionId)
+        position.orderStatus = OrderStatus.COMPLETED
+        registerEvent(PositionDelivered(id, position.id))
+        if (positions.all { it.orderStatus == OrderStatus.COMPLETED }) {
+            registerEvent(OrderCompleted(id))
+        }
     }
 }

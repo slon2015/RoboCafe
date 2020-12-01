@@ -1,7 +1,8 @@
 package com.robocafe.all.domain
 
-data class OrderPositionInfo(val menuPositionId: String, val count: Int) {
-    constructor(data: OrderPosition): this(data.menuPositionId, data.count)
+data class OrderPositionInfo(val menuPositionId: String,
+                             val positionId: String) {
+    constructor(data: OrderPosition): this(data.menuPositionId, data.id)
 }
 
 data class OrderCreated(
@@ -15,9 +16,9 @@ data class OrderPriceChanged(
         val price: Double
 )
 
-data class OrderPayed(val orderId: String, val price: Double)
 data class OrderRemoved(val orderId: String)
-data class OrderPaymentRemoved(val orderId: String, val price: Double)
-data class OrderStatusChanged(val orderId: String,
-                              val newOrderStatus: OrderStatus,
-                              val oldOrderStatus: OrderStatus)
+data class OrderCompleted(val orderId: String)
+
+data class PositionStartPreparing(val orderId: String, val positionId: String)
+data class PositionDone(val orderId: String, val positionId: String)
+data class PositionDelivered(val orderId: String, val positionId: String)
