@@ -67,16 +67,12 @@ class Message(@field:Id private val id: String, val text: String,
 class Chat(@field:Id val id: String,
             @field:ManyToMany @field:JoinTable(name ="chat_chat_members")
            val members: MutableSet<ChatMember> = HashSet()
-) : AbstractAggregateRoot<Chat?>() {
+) : AbstractAggregateRoot<Chat>() {
     private val chatId
         get() = ChatId(id)
 
     @OneToMany(mappedBy = "chat")
     val messages: MutableSet<Message> = HashSet()
-
-    init {
-        registerEvent(ChatStarted(chatId, members))
-    }
 
     fun joinMemberToChat(member: ChatMember) {
         members.add(member)
@@ -104,5 +100,13 @@ class Chat(@field:Id val id: String,
     fun removeMemberFromChat(memberId: String) {
         members.removeIf(Predicate.isEqual(memberId))
         registerEvent(MemberRemovedFromChat(chatId, ChatMemberId(memberId)))
+    }
+
+    companion object {
+        fun startChat(id: String, members: MutableSet<ChatMember> = HashSet()): Chat {
+            val chat = Chat(id, members)
+            chat.registerEvent(ChatStarted(chat.chatId, members))
+            return chat
+        }
     }
 }

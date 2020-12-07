@@ -57,11 +57,11 @@ class Party(@field:Id val id: String, val tableId: String, val maxMembers: Int) 
         }
     }
 
-
-
-    init {
-        registerEvent(PartyStarted(id, tableId))
+    companion object {
+        fun startParty(id: String, tableId: String, maxMembers: Int, memberCount: Int): Party {
+            val party = Party(id, tableId, maxMembers, memberCount)
+            party.registerEvent(PartyStarted(id, tableId))
+            return party
+        }
     }
-
-
 }

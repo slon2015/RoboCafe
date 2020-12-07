@@ -60,11 +60,6 @@ class Order(
         mapped
     }.toSet()
 
-    init {
-        registerEvent(OrderCreated(id, partyId, personId,
-                this.positions.map { OrderPositionInfo(it) }.toSet()))
-    }
-
     fun changePrice(price: Double) {
         this.price = price
         registerEvent(OrderPriceChanged(id, price))
@@ -96,6 +91,17 @@ class Order(
         registerEvent(PositionDelivered(id, position.id))
         if (positions.all { it.orderStatus == OrderStatus.COMPLETED }) {
             registerEvent(OrderCompleted(id))
+        }
+    }
+
+    companion object {
+        fun createOrder(id: String, partyId: String, personId: String?,
+                        positions: Set<OrderPositionData>,
+                        price: Double): Order {
+            val order = Order(id, partyId, personId, positions, price)
+            order.registerEvent(OrderCreated(id, partyId, personId,
+                    order.positions.map { OrderPositionInfo(it) }.toSet()))
+            return order
         }
     }
 }

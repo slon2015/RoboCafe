@@ -38,7 +38,7 @@ class PartyService @Autowired constructor(
 
     @Throws(TableNotFound::class, TableNotFree::class, TablePersonsCountLowerThanPartyMembersCount::class)
     fun startParty(tableId: String, partyId: String, maxMembersCount: Int, membersCount: Int) {
-        val newParty = Party(partyId, tableId, maxMembersCount, membersCount)
+        val newParty = Party.startParty(partyId, tableId, maxMembersCount, membersCount)
         repository.save(newParty)
     }
 

@@ -60,7 +60,7 @@ class ChatService @Autowired constructor(
     @Throws(PersonNotFound::class, PersonsPartyEnded::class, PartyNotFound::class, PartyAlreadyEnded::class)
     fun startChat(chatId: String, members: Set<ChatMemberInfo>): ChatInfo {
         val mappedMembers = members.map { mapMember(it) }.toMutableSet()
-        val chat = Chat(chatId, mappedMembers)
+        val chat = Chat.startChat(chatId, mappedMembers)
         chatRepository.save(chat)
         return ChatInfo(chat)
     }

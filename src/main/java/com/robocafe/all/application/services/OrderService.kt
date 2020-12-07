@@ -77,7 +77,7 @@ class OrderService @Autowired constructor(
     }
 
     fun createOrder(id: String, orderAuthorData: OrderAuthorData, positions: Set<OrderPositionData>, price: Double) {
-        Order(
+        Order.createOrder(
             id,
             orderAuthorData.partyId,
             orderAuthorData.memberId,

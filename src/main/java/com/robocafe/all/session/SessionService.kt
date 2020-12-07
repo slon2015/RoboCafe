@@ -130,13 +130,6 @@ class SessionService @Autowired constructor(
         tableService.registerTable(tableId, tableNumber, maxPersons)
     }
 
-    fun occupyTable(tableId: String) {
-        tableService.getTableInfo(tableId) operate {
-            assertStatusEquals(TableStatus.FREE)
-            tableService.occupyTable(tableId)
-        }
-    }
-
     fun cleanTable(tableId: String) {
         tableService.getTableInfo(tableId) operate {
             assertStatusEquals(TableStatus.AWAITS_CLEANING)
@@ -153,13 +146,6 @@ class SessionService @Autowired constructor(
 
     fun getTableInfo(tableId: String) = tableService.getTableInfo(tableId)
     fun getAllTablesInfo() = tableService.getAllTablesInfo()
-
-    fun startParty(tableId: String, partyId: String, maxMembersCount: Int, membersCount: Int) {
-        tableService.getTableInfo(tableId) operate {
-            assertStatusEquals(TableStatus.FREE)
-            partyService.startParty(tableId, partyId, maxMembersCount, membersCount)
-        }
-    }
 
     fun getParty(partyId: String) = partyService.getParty(partyId)
 

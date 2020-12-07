@@ -17,7 +17,7 @@ class TableService @Autowired constructor(private val repository: TableRepositor
     @Throws(TableWithSpecifiedNumAlreadyExists::class)
     fun registerTable(tableId: String, tableNumber: Int, maxPersons: Int) {
         if (repository.findByTableNumber(tableNumber) != null) {
-            val newTable = Table(tableId, tableNumber, maxPersons)
+            val newTable = Table.registerTable(tableId, tableNumber, maxPersons)
             repository.save(newTable)
         } else {
             throw TableWithSpecifiedNumAlreadyExists()

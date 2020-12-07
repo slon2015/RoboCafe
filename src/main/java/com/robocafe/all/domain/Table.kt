@@ -33,6 +33,13 @@ class Table(@field:Id val id: String, val tableNumber: Int, val maxPersons: Int)
 
     init {
         status = TableStatus.FREE
-        registerEvent(TableRegistered(id, tableNumber, maxPersons))
+    }
+
+    companion object {
+        fun registerTable(id: String, tableNumber: Int, maxPersons: Int): Table {
+            val table = Table(id, tableNumber, maxPersons)
+            table.registerEvent(TableRegistered(id, tableNumber, maxPersons))
+            return table
+        }
     }
 }
