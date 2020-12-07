@@ -1,11 +1,9 @@
 package com.robocafe.all.session
 
 import com.robocafe.all.application.services.*
-import com.robocafe.all.application.services.OrderPositionInfo
 import com.robocafe.all.domain.*
 import com.robocafe.all.menu.PositionService
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.context.event.EventListener
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import java.util.*
@@ -19,6 +17,7 @@ class SessionService @Autowired constructor(
         private val chatService: ChatService,
         private val positionService: PositionService,
         private val orderService: OrderService,
+        private val paymentService: PaymentService,
         private val sessionRepository: SessionRepository
 ) {
 
@@ -42,6 +41,39 @@ class SessionService @Autowired constructor(
         private fun PartyInfo.assertPersonInParty(personId: String) {
             if (members.all { it.id != personId }) {
                 throw PersonNotInParty()
+            }
+        }
+
+        private fun PartyInfo.assertUnpayedBalanceGreaterOrEquals(target: PaymentTarget,
+                                                                  amount: Double,
+                                                                  orderService: OrderService,
+                                                                  paymentService: PaymentService) {
+            val balance = if (target.personId == null) orderService.getBalanceForParty(id)
+                else orderService.getBalanceForPerson(target.personId)
+            val payedBalance = if (target.personId == null) paymentService.getConfirmedPaymentsAmountForParty(id)
+                else paymentService.getConfirmedPaymentsAmountForPerson(target.personId)
+            if (balance - payedBalance < amount) {
+                throw PaymentTargetBalanceLowerThanAmount()
+            }
+        }
+
+        private fun PartyInfo.assertMembersHaveNoOpenOrdersIn(orderService: OrderService) {
+            val orders = orderService.getOpenOrdersForParty(id)
+            if (orders.isNotEmpty()) {
+                throw PartyHasOpenOrders(orders)
+            }
+        }
+
+        private fun PartyInfo.assertBalancePayed(sessionService: SessionService) {
+            if (sessionService.getUnpayedBalanceForParty(id) > 0) {
+                throw BalanceForPartyNotPayed()
+            }
+        }
+
+        private infix fun PersonInfo.assertPersonHaveNoOpenOrdersIn(orderService: OrderService) {
+            val orders = orderService.getOpenOrdersForPerson(id)
+            if (orders.isNotEmpty()) {
+                throw PersonHasOpenOrders(orders)
             }
         }
 
@@ -105,27 +137,6 @@ class SessionService @Autowired constructor(
         }
     }
 
-//    fun Session.saveChanges() {
-//        sessionRepository.save(this)
-//    }
-//
-//    fun findSessionByParty(partyId: String): Session {
-//        return sessionRepository.findByPartyId(partyId) ?: throw SessionNotFound()
-//    }
-//
-//    fun findSessionByTable(tableId: String): Session {
-//        return sessionRepository.findByTableIdAndFinishedIsFalse(tableId) ?: throw SessionNotFound()
-//    }
-//
-//    fun startParty(tableId: String, membersCount: Int?): String {
-//        val table = tableService.getTableInfo(tableId)
-//        table operate {
-//            assertStatusEquals(TableStatus.FREE)
-//        }
-//        val partyId = UUID.randomUUID().toString()
-//        partyService.startParty(tableId)
-//    }
-
     fun registerTable(tableId: String, tableNumber: Int, maxPersons: Int) {
         tableService.registerTable(tableId, tableNumber, maxPersons)
     }
@@ -134,13 +145,6 @@ class SessionService @Autowired constructor(
         tableService.getTableInfo(tableId) operate {
             assertStatusEquals(TableStatus.AWAITS_CLEANING)
             tableService.cleanTable(tableId)
-        }
-    }
-
-    fun releaseTable(tableId: String) {
-        tableService.getTableInfo(tableId) operate {
-            assertStatusEquals(TableStatus.OCCUPIED)
-            tableService.releaseTable(tableId)
         }
     }
 
@@ -163,10 +167,6 @@ class SessionService @Autowired constructor(
             assertPersonInParty(personId)
             partyService.removePersonFromParty(partyId, personId)
         }
-    }
-
-    fun endParty(partyId: String) {
-        partyService.endParty(partyId)
     }
 
     fun changeMemberBalance(partyId: String, memberId: String, amount: Double) {
@@ -215,9 +215,11 @@ class SessionService @Autowired constructor(
         orderService.createOrder(id, orderAuthorData, positions, price)
     }
 
-    fun getBalanceForParty(partyId: String) = orderService.getBalanceForParty(partyId)
+    fun getUnpayedBalanceForParty(partyId: String) =
+            orderService.getBalanceForParty(partyId) - paymentService.getConfirmedPaymentsAmountForParty(partyId)
 
-    fun getBalanceForPerson(personId: String) = orderService.getBalanceForPerson(personId)
+    fun getUnpayedBalanceForPerson(personId: String) =
+            orderService.getBalanceForPerson(personId) - paymentService.getConfirmedPaymentsAmountForPerson(personId)
 
     fun changeOrderPrice(orderId: String, newPrice: Double) {
         orderService.changeOrderPrice(orderId, newPrice)
@@ -237,6 +239,56 @@ class SessionService @Autowired constructor(
 
     fun finishPositionDelivering(orderId: String, positionId: String) {
         orderService.finishPositionDelivering(orderId, positionId)
+    }
+
+    fun startSession(tableId: String, partyId: String, membersCount: Int) {
+        tableService.getTableInfo(tableId) operate {
+            assertStatusEquals(TableStatus.FREE)
+            tableService.occupyTable(tableId)
+            partyService.startParty(tableId, partyId, maxPersons, membersCount)
+        }
+    }
+
+    fun endSession(partyId: String) {
+        partyService.getParty(partyId) operate {
+            tableService.getTableInfo(tableId) operate {
+                assertStatusEquals(TableStatus.OCCUPIED)
+            }
+            assertMembersHaveNoOpenOrdersIn(orderService)
+            assertBalancePayed(this@SessionService)
+            partyService.endParty(partyId)
+            tableService.releaseTable(tableId)
+        }
+    }
+
+    fun createPayment(paymentId: String, target: PaymentTarget, amount: Double) {
+        partyService.getParty(target.partyId) operate {
+            if (target.personId != null) {
+                assertPersonInParty(target.personId)
+            }
+            assertUnpayedBalanceGreaterOrEquals(target, amount, orderService, paymentService)
+            paymentService.createPayment(paymentId, target, amount)
+        }
+    }
+
+    fun officiantMovedOutForPayment(paymentId: String) {
+        paymentService.officiantMovedOutForPayment(paymentId)
+    }
+
+    fun officiantWaitsForPayment(paymentId: String) {
+        paymentService.officiantWaitsForPayment(paymentId)
+    }
+
+    fun failPayment(paymentId: String) {
+        paymentService.failPayment(paymentId)
+    }
+
+    fun paymentWaitsConfirmation(paymentId: String) {
+        paymentService.paymentWaitsConfirmation(paymentId)
+    }
+
+    fun paymentConfirmed(paymentId: String) {
+        paymentService.paymentConfirmed(paymentId)
     }
 
     fun getOpenOrders() = orderService.getOpenOrders()

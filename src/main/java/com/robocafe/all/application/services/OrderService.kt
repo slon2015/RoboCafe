@@ -86,11 +86,11 @@ class OrderService @Autowired constructor(
     }
 
     fun getBalanceForParty(partyId: String) =
-            orderRepository.findAllByPartyIdAndClosedIsFalse(partyId)
+            orderRepository.findAllByPartyId(partyId)
                     .map { it.price }.sum()
 
     fun getBalanceForPerson(personId: String) =
-            orderRepository.findAllByPersonIdAndClosedIsFalse(personId)
+            orderRepository.findAllByPersonId(personId)
                     .map { it.price }.sum()
 
 
@@ -148,5 +148,12 @@ class OrderService @Autowired constructor(
     fun getPositionsOnDeliveringStage() =
             orderPositionRepository.findAllByOrderStatusEqualsDelivering()
                     .map { OrderPositionInfo(it) }.toSet()
+    fun getOpenOrdersForParty(partyId: String): Set<OrderInfo> =
+            orderRepository.findAllByPartyIdAndClosedIsFalse(partyId)
+                    .map { OrderInfo(it) }.toSet()
+    fun getOpenOrdersForPerson(personId: String) =
+            orderRepository.findAllByPersonIdAndClosedIsFalse(personId)
+                    .map { OrderInfo(it) }.toSet()
+
 }
 
