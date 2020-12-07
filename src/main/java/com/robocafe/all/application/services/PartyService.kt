@@ -17,17 +17,17 @@ class PartyService @Autowired constructor(
     @Throws(TableNotFound::class, TableNotFree::class, TablePersonsCountLowerThanPartyMembersCount::class)
     fun startParty(tableId: String, partyId: String, membersCount: Int?): Party {
         val selectedTable = tableService.getTableInfo(tableId)
-        if (selectedTable.status != TableStatus.FREE) {
+        if (selectedTable.tableStatus != TableStatus.FREE) {
             throw TableNotFree()
         }
         val newParty = if (membersCount != null) {
-            if (selectedTable.maxPersons < membersCount) {
+            if (selectedTable.tableMaxPersons < membersCount) {
                 throw TablePersonsCountLowerThanPartyMembersCount()
             }
-            Party(partyId, tableId, selectedTable.maxPersons, membersCount)
+            Party(partyId, tableId, selectedTable.tableMaxPersons, membersCount)
         }
         else {
-            Party(partyId, tableId, selectedTable.maxPersons)
+            Party(partyId, tableId, selectedTable.tableMaxPersons)
         }
         return repository.save(newParty)
     }

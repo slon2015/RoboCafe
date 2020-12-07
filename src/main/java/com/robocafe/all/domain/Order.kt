@@ -11,7 +11,7 @@ data class OrderPositionData(
 )
 
 enum class CloseCause {
-    PAYED,
+    COMPLETED,
     REMOVED
 }
 
@@ -95,6 +95,8 @@ class Order(
         position.orderStatus = OrderStatus.COMPLETED
         registerEvent(PositionDelivered(id, position.id))
         if (positions.all { it.orderStatus == OrderStatus.COMPLETED }) {
+            closed = true
+            closeCause = CloseCause.COMPLETED
             registerEvent(OrderCompleted(id))
         }
     }

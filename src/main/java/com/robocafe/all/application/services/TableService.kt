@@ -6,6 +6,15 @@ import com.robocafe.all.domain.TableStatus
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
+data class TableInfo(
+        val id: String,
+        val tableStatus: TableStatus,
+        val tableNumber: Int,
+        val tableMaxPersons: Int
+) {
+    constructor(data: Table): this(data.id, data.status, data.tableNumber, data.maxPersons)
+}
+
 @Service
 class TableService @Autowired constructor(private val repository: TableRepository) {
     @Throws(TableWithSpecifiedNumAlreadyExists::class)
@@ -58,7 +67,7 @@ class TableService @Autowired constructor(private val repository: TableRepositor
     }
 
     @Throws(TableNotFound::class)
-    fun getTableInfo(tableId: String): Table {
-        return repository.findById(tableId).orElseThrow { TableNotFound() }
+    fun getTableInfo(tableId: String): TableInfo {
+        return TableInfo(repository.findById(tableId).orElseThrow { TableNotFound() })
     }
 }
