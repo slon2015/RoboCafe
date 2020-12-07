@@ -9,4 +9,5 @@ interface OrderRepository: JpaRepository<Order, String> {
     fun findByIdAndClosedIsFalse(id: String): Order?
     fun findAllByPartyIdAndClosedIsFalse(partyId: String): Set<Order>
     fun findAllByPersonIdAndClosedIsFalse(personId: String): Set<Order>
+    fun findAllByClosedIsFalse(): Set<Order>
 }

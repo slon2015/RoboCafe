@@ -49,4 +49,8 @@ class TableService @Autowired constructor(private val repository: TableRepositor
     fun getTableInfo(tableId: String): TableInfo {
         return TableInfo(repository.findById(tableId).orElseThrow { TableNotFound() })
     }
+
+    fun getAllTablesInfo(): Set<TableInfo> {
+        return repository.findAll().map { TableInfo(it) }.toSet()
+    }
 }

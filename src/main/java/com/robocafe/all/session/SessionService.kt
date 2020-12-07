@@ -1,6 +1,7 @@
 package com.robocafe.all.session
 
 import com.robocafe.all.application.services.*
+import com.robocafe.all.application.services.OrderPositionInfo
 import com.robocafe.all.domain.*
 import com.robocafe.all.menu.PositionService
 import org.springframework.beans.factory.annotation.Autowired
@@ -151,6 +152,7 @@ class SessionService @Autowired constructor(
     }
 
     fun getTableInfo(tableId: String) = tableService.getTableInfo(tableId)
+    fun getAllTablesInfo() = tableService.getAllTablesInfo()
 
     fun startParty(tableId: String, partyId: String, maxMembersCount: Int, membersCount: Int) {
         tableService.getTableInfo(tableId) operate {
@@ -250,4 +252,12 @@ class SessionService @Autowired constructor(
     fun finishPositionDelivering(orderId: String, positionId: String) {
         orderService.finishPositionDelivering(orderId, positionId)
     }
+
+    fun getOpenOrders() = orderService.getOpenOrders()
+    fun getPositionsForOrderThatWaitsForPreparing(orderId: String) =
+            orderService.getPositionsForOrderThatWaitsForPreparing(orderId)
+    fun getPositionsOnPreparingStage() =
+            orderService.getPositionsOnPreparingStage()
+    fun getPositionsOnDeliveringStage() =
+            orderService.getPositionsOnDeliveringStage()
 }

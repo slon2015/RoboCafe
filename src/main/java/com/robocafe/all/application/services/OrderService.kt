@@ -1,5 +1,6 @@
 package com.robocafe.all.application.services
 
+import com.robocafe.all.application.repositories.OrderPositionRepository
 import com.robocafe.all.application.repositories.OrderRepository
 import com.robocafe.all.domain.Order
 import com.robocafe.all.domain.OrderPosition
@@ -14,9 +15,27 @@ data class OrderAuthorData(
         val memberId: String?
 )
 
+data class OrderPositionInfo(
+        val id: String,
+        val menuPositionId: String,
+        var orderStatus: OrderStatus = OrderStatus.WAITING
+) {
+    constructor(data: OrderPosition): this(data.id, data.menuPositionId, data.orderStatus)
+}
+
+data class OrderInfo(
+        val id: String, val partyId: String, val personId: String?,
+        val positions: Set<OrderPositionInfo>,
+        var price: Double
+) {
+    constructor(data: Order): this(data.id, data.partyId, data.personId,
+            data.positions.map { OrderPositionInfo(it) }.toSet(), data.price)
+}
+
 @Service
 class OrderService @Autowired constructor(
-        private val orderRepository: OrderRepository
+        private val orderRepository: OrderRepository,
+        private val orderPositionRepository: OrderPositionRepository
 ) {
 
     /**
@@ -118,5 +137,16 @@ class OrderService @Autowired constructor(
             saveChanges()
         }
     }
+
+    fun getOpenOrders() = orderRepository.findAllByClosedIsFalse().map { OrderInfo(it) }.toSet()
+    fun getPositionsForOrderThatWaitsForPreparing(orderId: String) =
+            orderPositionRepository.findAllByOrderIdAndOrderStatusEqualsWaiting(orderId)
+                    .map { OrderPositionInfo(it) }.toSet()
+    fun getPositionsOnPreparingStage() =
+            orderPositionRepository.findAllByOrderStatusEqualsPreparing()
+                    .map { OrderPositionInfo(it) }.toSet()
+    fun getPositionsOnDeliveringStage() =
+            orderPositionRepository.findAllByOrderStatusEqualsDelivering()
+                    .map { OrderPositionInfo(it) }.toSet()
 }
 

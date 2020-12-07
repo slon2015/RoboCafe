@@ -4,6 +4,7 @@ import com.robocafe.all.application.security.JwtFilter
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
+import org.springframework.http.HttpMethod
 import org.springframework.security.config.annotation.web.builders.HttpSecurity
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter
@@ -33,13 +34,18 @@ class SecurityConfig @Autowired constructor(
                 .and()
                 .authorizeRequests()
                     .antMatchers("/admin/tables").hasAuthority("tables_managment")
+                    .antMatchers("/workers/**").hasRole("worker")
+                    .antMatchers(HttpMethod.POST,"/workers/kitchen/**").hasAuthority("kitchen_managment")
+                    .antMatchers(HttpMethod.GET, "/workers/kitchen/view/**").hasAuthority("kitchen_view")
+                    .antMatchers(HttpMethod.POST,"/workers/hall/**").hasAuthority("hall_managment")
+                    .antMatchers(HttpMethod.GET, "/workers/hall/view/**").hasAuthority("hall_view")
                     .anyRequest().permitAll()
                 .and()
                 .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter::class.java)
     }
 
     @Bean
-    fun passwordEncoder(): PasswordEncoder? {
+    fun passwordEncoder(): PasswordEncoder {
         return BCryptPasswordEncoder()
     }
 }

@@ -3,6 +3,7 @@ package com.robocafe.all.application.handlers
 import com.robocafe.all.application.handlers.models.RegisterTable
 import com.robocafe.all.application.services.TableService
 import com.robocafe.all.application.services.TableWithSpecifiedNumAlreadyExists
+import com.robocafe.all.session.SessionService
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
@@ -14,13 +15,13 @@ import java.util.*
 
 @RestController
 @RequestMapping("/admin/tables")
-class TableAdminController @Autowired constructor(private val tableService: TableService) {
+class TableAdminController @Autowired constructor(private val sessionService: SessionService) {
 
     @PostMapping
     fun register(@RequestBody body: RegisterTable): ResponseEntity<String> {
         val id = UUID.randomUUID().toString()
         return try {
-            tableService.registerTable(id, body.tableNum, body.tableMaxPersons)
+            sessionService.registerTable(id, body.tableNum, body.tableMaxPersons)
             ResponseEntity.ok(id)
         } catch (e: TableWithSpecifiedNumAlreadyExists) {
             ResponseEntity.status(HttpStatus.CONFLICT).build()
