@@ -6,6 +6,12 @@ import com.robocafe.all.domain.TableStatus
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
+data class TableInfo(
+        val id: String, val tableNumber: Int, val maxPersons: Int, val status: TableStatus
+) {
+    constructor(data: Table): this(data.id, data.tableNumber, data.maxPersons, data.status)
+}
+
 @Service
 class TableService @Autowired constructor(private val repository: TableRepository) {
     @Throws(TableWithSpecifiedNumAlreadyExists::class)
@@ -20,45 +26,27 @@ class TableService @Autowired constructor(private val repository: TableRepositor
 
     @Throws(TableNotFound::class, TableAlreadyOccupied::class, TableAwaitsCleaningOccupationFailed::class)
     fun occupyTable(tableId: String) {
-        val table = repository.findById(tableId).orElseThrow { TableNotFound() }!!
-        when (table.status) {
-            TableStatus.OCCUPIED -> throw TableAlreadyOccupied()
-            TableStatus.AWAITS_CLEANING -> throw TableAwaitsCleaningOccupationFailed()
-            TableStatus.FREE -> {
-                table.occupyTable()
-                repository.save(table)
-            }
-        }
+        val table = repository.findById(tableId).orElseThrow { TableNotFound() }
+        table.occupyTable()
+        repository.save(table)
     }
 
     @Throws(TableNotFound::class, TableOccupiedCleanFailed::class, TableAlreadyClean::class)
     fun cleanTable(tableId: String) {
         val table = repository.findById(tableId).orElseThrow { TableNotFound() }
-        when (table.status) {
-            TableStatus.OCCUPIED -> throw TableOccupiedCleanFailed()
-            TableStatus.AWAITS_CLEANING -> {
-                table.cleanTable()
-                repository.save(table)
-            }
-            TableStatus.FREE -> throw TableAlreadyClean()
-        }
+        table.cleanTable()
+        repository.save(table)
     }
 
     @Throws(TableNotFound::class, TableAwaitsCleaningReleaseFailed::class, TableAlreadyReleased::class)
     fun releaseTable(tableId: String) {
         val table = repository.findById(tableId).orElseThrow { TableNotFound() }
-        when (table.status) {
-            TableStatus.OCCUPIED -> {
-                table.freeTable()
-                repository.save(table)
-            }
-            TableStatus.AWAITS_CLEANING -> throw TableAwaitsCleaningReleaseFailed()
-            TableStatus.FREE -> throw TableAlreadyReleased()
-        }
+        table.freeTable()
+        repository.save(table)
     }
 
     @Throws(TableNotFound::class)
-    fun getTableInfo(tableId: String): Table {
-        return repository.findById(tableId).orElseThrow { TableNotFound() }
+    fun getTableInfo(tableId: String): TableInfo {
+        return TableInfo(repository.findById(tableId).orElseThrow { TableNotFound() })
     }
 }

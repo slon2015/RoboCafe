@@ -6,5 +6,5 @@ import org.springframework.stereotype.Repository
 
 @Repository
 interface PersonRepository : JpaRepository<Person, String> {
-    fun existsByIdAndPartyIdAndPartyEndTimeIsNull(personId: String?, partyId: String?): Boolean
+    fun existsByIdAndPartyEndTimeIsNull(personId: String): Boolean
 }

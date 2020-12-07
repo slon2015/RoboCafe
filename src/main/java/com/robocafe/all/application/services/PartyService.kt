@@ -4,13 +4,29 @@ import org.springframework.beans.factory.annotation.Autowired
 import com.robocafe.all.application.repositories.PartyRepository
 import kotlin.Throws
 import com.robocafe.all.domain.Party
+import com.robocafe.all.domain.Person
 import com.robocafe.all.domain.TableStatus
 import org.springframework.stereotype.Service
+import java.time.Instant
+
+data class PersonInfo(
+        val id: String, val balance: Double
+) {
+    constructor(data: Person): this(data.id, data.balance)
+}
+
+data class PartyInfo(
+        val id: String, val tableId: String, val maxMembers: Int,
+        val members: Set<PersonInfo>,
+        val endTime: Instant?
+) {
+    constructor(data: Party): this(data.id, data.tableId, data.maxMembers,
+            data.members.map { PersonInfo(it) }.toSet(), data.endTime)
+}
 
 @Service
 class PartyService @Autowired constructor(
         private val repository: PartyRepository,
-//        private val tableService: TableService,
         private val personService: PersonService
 ) {
 
@@ -21,17 +37,12 @@ class PartyService @Autowired constructor(
     }
 
     @Throws(TableNotFound::class, TableNotFree::class, TablePersonsCountLowerThanPartyMembersCount::class)
-    fun startParty(tableId: String, partyId: String, maxMembersCount: Int, membersCount: Int): Party {
-        val selectedTable = tableService.getTableInfo(tableId)
-        if (selectedTable.status != TableStatus.FREE) {
-            throw TableNotFree()
-        }
+    fun startParty(tableId: String, partyId: String, maxMembersCount: Int, membersCount: Int) {
         val newParty = Party(partyId, tableId, maxMembersCount, membersCount)
-        return repository.save(newParty)
+        repository.save(newParty)
     }
 
-    @Throws(PartyNotFound::class, PartyAlreadyEnded::class)
-    fun findNotEndedParty(partyId: String): Party {
+    private fun findNotEndedParty(partyId: String): Party {
         val party = repository.findById(partyId).orElseThrow { PartyNotFound() }!!
         if (party.endTime == null) {
             return party
@@ -41,6 +52,11 @@ class PartyService @Autowired constructor(
         }
     }
 
+    @Throws(PartyNotFound::class, PartyAlreadyEnded::class)
+    fun getParty(partyId: String): PartyInfo {
+        return PartyInfo(findNotEndedParty(partyId))
+    }
+
     fun notEndedPartyExists(partyId: String) =
             repository.existsByIdAndEndTimeIsNull(partyId)
 
@@ -48,9 +64,6 @@ class PartyService @Autowired constructor(
     @Throws(PartyNotFound::class, PartyAlreadyEnded::class, PartyAlreadyFull::class)
     fun joinPerson(partyId: String, personId: String) {
         val party = findNotEndedParty(partyId)
-        if (party.members.size == party.maxMembers) {
-            throw PartyAlreadyFull()
-        }
         party.joinPersonToParty(personId);
         repository.save(party)
     }
@@ -58,15 +71,8 @@ class PartyService @Autowired constructor(
     @Throws(PartyNotFound::class, PartyAlreadyEnded::class, PersonNotFound::class, PersonNotInParty::class)
     fun removePersonFromParty(partyId: String, personId: String) {
         val party = findNotEndedParty(partyId)
-        val person = personService.findPerson(personId)
-
-        if (party.members.contains(person)) {
-            party.removePersonFromParty(personId)
-            repository.save(party);
-        }
-        else {
-            throw PersonNotInParty()
-        }
+        party.removePersonFromParty(personId)
+        repository.save(party)
     }
 
     @Throws(PartyNotFound::class, PartyAlreadyEnded::class)
@@ -77,9 +83,6 @@ class PartyService @Autowired constructor(
     }
 
     fun changeMemberBalance(partyId: String, memberId: String, amount: Double) {
-        if (!personService.personWithActivePartyExists(memberId, partyId)) {
-            throw PersonNotInParty()
-        }
         val party = findNotEndedParty(partyId)
         party.changePersonBalance(memberId, amount)
         repository.save(party)

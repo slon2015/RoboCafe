@@ -16,62 +16,40 @@ data class OrderAuthorData(
 
 @Service
 class OrderService @Autowired constructor(
-        private val orderRepository: OrderRepository,
-        private val partyService: PartyService,
-        private val personService: PersonService,
-        private val positionService: PositionService
+        private val orderRepository: OrderRepository
 ) {
 
     /**
        Each service must contain private companion object Dsl with specific
-       for this service domain language implemented in expansion functions.
+       for this service domain language implemented in private expansion functions.
        Most of this functions contains assertions. All exception throwings must be performed in this functions.
        Naming of this functions must contain "assert" and checked condition.
        Use infix functions everywhere you can.
        Most of implemented functions must be used in closure, created by function [operate]
     */
     private companion object Dsl {
-        infix fun Order.operate(operation: Order.() -> Unit) {
+        private infix fun Order.operate(operation: Order.() -> Unit) {
             operation(this)
         }
 
-        fun Order.assertPositionContainsInOrder(positionId: String): OrderPosition {
+        private fun Order.assertPositionContainsInOrder(positionId: String): OrderPosition {
             return positions.find { it.id == positionId } ?: throw PositionNotInOrder()
         }
 
-        fun Order.assertOrderIsNotClosed() {
+        private fun Order.assertOrderIsNotClosed() {
             if (closed) {
                 throw OrderAlreadyClosed()
             }
         }
 
-        infix fun OrderPosition.assertPositionStatusEquals(orderStatus: OrderStatus) {
+        private infix fun OrderPosition.assertPositionStatusEquals(orderStatus: OrderStatus) {
             if (orderStatus != orderStatus) {
                 throw IncorrectPositionStatus()
             }
         }
-
-        infix fun OrderAuthorData.checkPartyIn(partyService: PartyService): OrderAuthorData {
-            if (!partyService.notEndedPartyExists(partyId)) {
-                throw InvalidParty()
-            }
-            return this
-        }
-
-        infix fun OrderAuthorData.checkMemberIn(personService: PersonService): OrderAuthorData {
-            if (memberId != null && !personService.personWithActivePartyExists(memberId, partyId)) {
-                throw InvalidPerson()
-            }
-            return this
-        }
-
-        infix fun Set<OrderPositionData>.calculatePriceWith(positionService: PositionService): Double {
-            return map { it to positionService.getPositionInfo(it.menuPositionId) }
-                    .map { it.second.price * it.first.count }.sum()
-        }
     }
 
-    private fun findOrder(orderId: String) =
+    private fun getOrder(orderId: String) =
             orderRepository.findById(orderId).orElseThrow { OrderNotFound() }
 
 
@@ -79,13 +57,12 @@ class OrderService @Autowired constructor(
         orderRepository.save(this)
     }
 
-    fun createOrder(id: String, orderAuthorData: OrderAuthorData, positions: Set<OrderPositionData>) {
-        orderAuthorData checkPartyIn(partyService) checkMemberIn(personService)
+    fun createOrder(id: String, orderAuthorData: OrderAuthorData, positions: Set<OrderPositionData>, price: Double) {
         Order(
             id,
             orderAuthorData.partyId,
             orderAuthorData.memberId,
-            positions, positions calculatePriceWith positionService
+            positions, price
         ).saveChanges()
     }
 
@@ -100,7 +77,7 @@ class OrderService @Autowired constructor(
 
 
     fun changeOrderPrice(orderId: String, newPrice: Double) {
-        findOrder(orderId) operate {
+        getOrder(orderId) operate {
             assertOrderIsNotClosed()
             changePrice(newPrice)
             saveChanges()
@@ -108,7 +85,7 @@ class OrderService @Autowired constructor(
     }
 
     fun removeOrder(orderId: String) {
-        findOrder(orderId) operate {
+        getOrder(orderId) operate {
             assertOrderIsNotClosed()
             removeOrder()
             saveChanges()
@@ -116,7 +93,7 @@ class OrderService @Autowired constructor(
     }
 
     fun startPositionPreparing(orderId: String, positionId: String) {
-        findOrder(orderId) operate {
+        getOrder(orderId) operate {
             assertOrderIsNotClosed()
             assertPositionContainsInOrder(positionId) assertPositionStatusEquals OrderStatus.WAITING
             startPositionPreparing(positionId)
@@ -125,7 +102,7 @@ class OrderService @Autowired constructor(
     }
 
     fun finishPositionPreparing(orderId: String, positionId: String) {
-        findOrder(orderId) operate {
+        getOrder(orderId) operate {
             assertOrderIsNotClosed()
             assertPositionContainsInOrder(positionId) assertPositionStatusEquals OrderStatus.PREPARING
             preparePosition(positionId)
@@ -134,7 +111,7 @@ class OrderService @Autowired constructor(
     }
 
     fun finishPositionDelivering(orderId: String, positionId: String) {
-        findOrder(orderId) operate {
+        getOrder(orderId) operate {
             assertOrderIsNotClosed()
             assertPositionContainsInOrder(positionId) assertPositionStatusEquals OrderStatus.DELIVERING
             deliverPosition(positionId)
