@@ -6,7 +6,6 @@ import com.robocafe.all.domain.Order
 import com.robocafe.all.domain.OrderPosition
 import com.robocafe.all.domain.OrderPositionData
 import com.robocafe.all.domain.OrderStatus
-import com.robocafe.all.menu.PositionService
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 

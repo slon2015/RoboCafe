@@ -30,10 +30,12 @@ dependencies {
     implementation("io.jsonwebtoken:jjwt-api:0.11.2")
     implementation("io.springfox:springfox-boot-starter:3.0.0")
     implementation("io.springfox:springfox-swagger-ui:3.0.0")
+    implementation("org.flywaydb:flyway-core")
     developmentOnly("org.springframework.boot:spring-boot-devtools")
     runtimeOnly("io.jsonwebtoken:jjwt-impl:0.11.2")
     runtimeOnly("io.jsonwebtoken:jjwt-jackson:0.11.2")
     runtimeOnly("com.h2database:h2")
+    runtimeOnly("org.mariadb.jdbc:mariadb-java-client:1.5.7")
     testImplementation("org.springframework.boot:spring-boot-starter-test")
     testImplementation("io.projectreactor:reactor-test")
     testImplementation("org.springframework.security:spring-security-test")
@@ -50,8 +52,3 @@ tasks.withType<KotlinCompile> {
     }
 }
 
-
-
-tasks.withType<BootRun> {
-    args = listOf("--spring.profiles.active=dev, aficheDataService, positionDataService")
-}
