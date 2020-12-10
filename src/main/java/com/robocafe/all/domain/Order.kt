@@ -11,8 +11,8 @@ data class OrderPositionData(
 )
 
 enum class CloseCause {
-    PAYED,
-    REMOVED
+    REMOVED,
+    COMPLETED
 }
 
 enum class OrderStatus {
@@ -38,7 +38,7 @@ class OrderPosition(
 @Entity
 @Table(name = "menu_order")
 class Order(
-        @field:Id val id: String, val partyId: String, val personId: String?,
+        @field:Id val id: String, val partyId: String, val personId: String,
         positions: Set<OrderPositionData>,
         var price: Double,
 ): AbstractAggregateRoot<Order>() {
@@ -90,17 +90,19 @@ class Order(
         position.orderStatus = OrderStatus.COMPLETED
         registerEvent(PositionDelivered(id, position.id))
         if (positions.all { it.orderStatus == OrderStatus.COMPLETED }) {
+            closed = true
+            closeCause = CloseCause.COMPLETED
             registerEvent(OrderCompleted(id))
         }
     }
 
     companion object {
-        fun createOrder(id: String, partyId: String, personId: String?,
+        fun createOrder(id: String, partyId: String, personId: String,
                         positions: Set<OrderPositionData>,
                         price: Double): Order {
             val order = Order(id, partyId, personId, positions, price)
             order.registerEvent(OrderCreated(id, partyId, personId,
-                    order.positions.map { OrderPositionInfo(it) }.toSet()))
+                    order.positions.map { OrderPositionPoint(it) }.toSet()))
             return order
         }
     }

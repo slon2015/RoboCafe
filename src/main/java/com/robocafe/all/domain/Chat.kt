@@ -8,56 +8,26 @@ import javax.persistence.*
 class ChatMemberAlreadyAssignedToPerson: Exception()
 class ChatMemberAlreadyAssignedToParty: Exception()
 
-inline class ChatMemberId(val id: String)
+data class ChatMemberId(val partyId: String, val personId: String)
 inline class MessageId(val id: String)
 inline class ChatId(val id: String)
 
-enum class ChatMemberType {
-    PARTY,
-    PERSON,
-    UNKNOWN
-}
 
-@Entity
 /// Constructor must not contain inline classes in signature
-class ChatMember(@field:Id private val id: String) {
+@Embeddable
+class ChatMember(memberId: ChatMemberId) {
     val chatMemberId
-        get() = ChatMemberId(id)
-    var partyId: String? = null
-        set(value) {
-            if (personId != null) {
-                throw ChatMemberAlreadyAssignedToPerson()
-            }
-            field = value
-        }
-    var personId: String? = null
-        set(value) {
-            if (partyId != null) {
-                throw ChatMemberAlreadyAssignedToParty()
-            }
-            field = value
-        }
-    val type: ChatMemberType
-        get() {
-            return when {
-                personId != null -> {
-                    ChatMemberType.PERSON
-                }
-                partyId != null -> {
-                    ChatMemberType.PARTY
-                }
-                else -> {
-                    ChatMemberType.UNKNOWN
-                }
-            }
-        }
+        get() = ChatMemberId(partyId, personId)
+    val partyId = memberId.partyId
+    val personId = memberId.personId
 }
 
 @Entity
 class Message(@field:Id private val id: String, val text: String,
-                @field:ManyToOne @field:JoinColumn(name = "authorId")
+              @field:Embedded
               val author: ChatMember,
-                @field:ManyToOne @field:JoinColumn(name = "chatId")
+              @field:ManyToOne
+              @field:JoinColumn(name = "chat_id")
               val chat: Chat) {
     val messageId
         get() = MessageId(id)
@@ -65,7 +35,8 @@ class Message(@field:Id private val id: String, val text: String,
 
 @Entity
 class Chat(@field:Id val id: String,
-            @field:ManyToMany @field:JoinTable(name ="chat_chat_members")
+            @field:ElementCollection
+            @field:CollectionTable(name ="chat_chat_members")
            val members: MutableSet<ChatMember> = HashSet()
 ) : AbstractAggregateRoot<Chat>() {
     private val chatId
@@ -74,36 +45,25 @@ class Chat(@field:Id val id: String,
     @OneToMany(mappedBy = "chat")
     val messages: MutableSet<Message> = HashSet()
 
-    fun joinMemberToChat(member: ChatMember) {
-        members.add(member)
-        registerEvent(MemberJoinedToChat(chatId, member.chatMemberId))
+    fun joinMemberToChat(member: ChatMemberId) {
+        members.add(ChatMember(member))
+        registerEvent(MemberJoinedToChat(chatId, member))
     }
 
-    fun joinPersonMemberToChat(memberId: String, personId: String) {
-        val member = ChatMember(memberId)
-        member.personId = personId
-        joinMemberToChat(member)
-    }
-
-    fun joinPartyMemberToChat(memberId: String, partyId: String) {
-        val member = ChatMember(memberId)
-        member.partyId = partyId
-        joinMemberToChat(member)
-    }
-
-    fun sendMessage(messageId: String, messageText: String, author: ChatMember) {
-        val message = Message(messageId, messageText, author, this)
+    fun sendMessage(messageId: String, messageText: String, author: ChatMemberId) {
+        val message = Message(messageId, messageText, ChatMember(author), this)
         messages.add(message)
-        registerEvent(MessageSentToChat(chatId, author.chatMemberId, message.messageId))
+        registerEvent(MessageSentToChat(chatId, author, message.messageId))
     }
 
-    fun removeMemberFromChat(memberId: String) {
-        members.removeIf(Predicate.isEqual(memberId))
-        registerEvent(MemberRemovedFromChat(chatId, ChatMemberId(memberId)))
+    fun removeMemberFromChat(member: ChatMemberId) {
+        members.removeIf { it.partyId == member.partyId && it.personId == member.personId }
+        registerEvent(MemberRemovedFromChat(chatId, member))
     }
 
     companion object {
-        fun startChat(id: String, members: MutableSet<ChatMember> = HashSet()): Chat {
+        fun startChat(id: String, ids: MutableSet<ChatMemberId> = HashSet()): Chat {
+            val members = ids.map { ChatMember(it) }.toMutableSet()
             val chat = Chat(id, members)
             chat.registerEvent(ChatStarted(chat.chatId, members))
             return chat

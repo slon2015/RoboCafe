@@ -117,10 +117,9 @@ CREATE TABLE `chat_member` (
 
 CREATE TABLE `chat_chat_members` (
   `chat_id` varchar(255) NOT NULL,
-  `members_id` varchar(255) NOT NULL,
-  PRIMARY KEY (`chat_id`,`members_id`),
-  KEY `FK46hnp86nmp69bn2960bx6tv8c` (`members_id`),
-  CONSTRAINT `FK46hnp86nmp69bn2960bx6tv8c` FOREIGN KEY (`members_id`) REFERENCES `chat_member` (`id`),
+  `party_id` varchar(255) NOT NULL,
+  `person_id` varchar(255) NOT NULL,
+  PRIMARY KEY (`chat_id`,`party_id`,`person_id`),
   CONSTRAINT `FKilui4yhwoepdpt7i4ldqrqvj8` FOREIGN KEY (`chat_id`) REFERENCES `chat` (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
@@ -156,13 +155,12 @@ CREATE TABLE `menu_position_categories` (
 CREATE TABLE `message` (
   `id` varchar(255) NOT NULL,
   `text` varchar(255) DEFAULT NULL,
-  `author_id` varchar(255) DEFAULT NULL,
+  `party_id` varchar(255) NOT NULL,
+  `person_id` varchar(255) NOT NULL,
   `chat_id` varchar(255) DEFAULT NULL,
   PRIMARY KEY (`id`),
-  KEY `FKpuavs9mkv32npylqpf6fa799p` (`author_id`),
   KEY `FKmejd0ykokrbuekwwgd5a5xt8a` (`chat_id`),
-  CONSTRAINT `FKmejd0ykokrbuekwwgd5a5xt8a` FOREIGN KEY (`chat_id`) REFERENCES `chat` (`id`),
-  CONSTRAINT `FKpuavs9mkv32npylqpf6fa799p` FOREIGN KEY (`author_id`) REFERENCES `chat_member` (`id`)
+  CONSTRAINT `FKmejd0ykokrbuekwwgd5a5xt8a` FOREIGN KEY (`chat_id`) REFERENCES `chat` (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 
@@ -222,3 +220,6 @@ CREATE TABLE `session_chat_ids` (
   KEY `FKavch1p5unlbiaxi8cbusngvdx` (`session_id`),
   CONSTRAINT `FKavch1p5unlbiaxi8cbusngvdx` FOREIGN KEY (`session_id`) REFERENCES `cafe_sessions` (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+
+CREATE SEQUENCE `hibernate_sequence`;

@@ -2,16 +2,13 @@ package com.robocafe.all.application.services
 
 import com.robocafe.all.application.repositories.OrderPositionRepository
 import com.robocafe.all.application.repositories.OrderRepository
-import com.robocafe.all.domain.Order
-import com.robocafe.all.domain.OrderPosition
-import com.robocafe.all.domain.OrderPositionData
-import com.robocafe.all.domain.OrderStatus
+import com.robocafe.all.domain.*
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
 data class OrderAuthorData(
         val partyId: String,
-        val memberId: String?
+        val memberId: String
 )
 
 data class OrderPositionInfo(
@@ -23,12 +20,16 @@ data class OrderPositionInfo(
 }
 
 data class OrderInfo(
-        val id: String, val partyId: String, val personId: String?,
+        val id: String, val partyId: String, val personId: String,
         val positions: Set<OrderPositionInfo>,
-        var price: Double
+        var price: Double,
+        val closed: Boolean,
+        val closeCause: CloseCause?
 ) {
     constructor(data: Order): this(data.id, data.partyId, data.personId,
-            data.positions.map { OrderPositionInfo(it) }.toSet(), data.price)
+            data.positions.map { OrderPositionInfo(it) }.toSet(), data.price,
+            data.closed,
+            data.closeCause)
 }
 
 @Service
@@ -39,36 +40,45 @@ class OrderService @Autowired constructor(
 
     /**
        Each service must contain private companion object Dsl with specific
-       for this service domain language implemented in private expansion functions.
+       for this service domain language implemented in expansion functions.
        Most of this functions contains assertions. All exception throwings must be performed in this functions.
        Naming of this functions must contain "assert" and checked condition.
        Use infix functions everywhere you can.
        Most of implemented functions must be used in closure, created by function [operate]
     */
     private companion object Dsl {
-        private infix fun Order.operate(operation: Order.() -> Unit) {
+
+        infix fun Order.operate(operation: Order.() -> Unit) {
             operation(this)
         }
 
-        private fun Order.assertPositionContainsInOrder(positionId: String): OrderPosition {
+        fun Order.assertPositionContainsInOrder(positionId: String): OrderPosition {
             return positions.find { it.id == positionId } ?: throw PositionNotInOrder()
         }
 
-        private fun Order.assertOrderIsNotClosed() {
+        fun Order.assertOrderIsNotClosed() {
             if (closed) {
                 throw OrderAlreadyClosed()
             }
         }
 
-        private infix fun OrderPosition.assertPositionStatusEquals(orderStatus: OrderStatus) {
+        fun Order.assertOrderNotCompleted() {
+            if (positions.all { it.orderStatus == OrderStatus.COMPLETED }) {
+                throw OrderAlreadyCompleted()
+            }
+        }
+
+        infix fun OrderPosition.assertPositionStatusEquals(orderStatus: OrderStatus) {
             if (orderStatus != orderStatus) {
                 throw IncorrectPositionStatus()
             }
         }
     }
 
-    private fun getOrder(orderId: String) =
+    private fun findOrder(orderId: String) =
             orderRepository.findById(orderId).orElseThrow { OrderNotFound() }
+
+    fun getOrder(orderId: String) = OrderInfo(findOrder(orderId))
 
 
     private fun Order.saveChanges() {
@@ -95,7 +105,7 @@ class OrderService @Autowired constructor(
 
 
     fun changeOrderPrice(orderId: String, newPrice: Double) {
-        getOrder(orderId) operate {
+        findOrder(orderId) operate {
             assertOrderIsNotClosed()
             changePrice(newPrice)
             saveChanges()
@@ -103,15 +113,16 @@ class OrderService @Autowired constructor(
     }
 
     fun removeOrder(orderId: String) {
-        getOrder(orderId) operate {
+        findOrder(orderId) operate {
             assertOrderIsNotClosed()
+            assertOrderNotCompleted()
             removeOrder()
             saveChanges()
         }
     }
 
     fun startPositionPreparing(orderId: String, positionId: String) {
-        getOrder(orderId) operate {
+        findOrder(orderId) operate {
             assertOrderIsNotClosed()
             assertPositionContainsInOrder(positionId) assertPositionStatusEquals OrderStatus.WAITING
             startPositionPreparing(positionId)
@@ -120,7 +131,7 @@ class OrderService @Autowired constructor(
     }
 
     fun finishPositionPreparing(orderId: String, positionId: String) {
-        getOrder(orderId) operate {
+        findOrder(orderId) operate {
             assertOrderIsNotClosed()
             assertPositionContainsInOrder(positionId) assertPositionStatusEquals OrderStatus.PREPARING
             preparePosition(positionId)
@@ -129,7 +140,7 @@ class OrderService @Autowired constructor(
     }
 
     fun finishPositionDelivering(orderId: String, positionId: String) {
-        getOrder(orderId) operate {
+        findOrder(orderId) operate {
             assertOrderIsNotClosed()
             assertPositionContainsInOrder(positionId) assertPositionStatusEquals OrderStatus.DELIVERING
             deliverPosition(positionId)
@@ -155,4 +166,5 @@ class OrderService @Autowired constructor(
                     .map { OrderInfo(it) }.toSet()
 
 }
+
 

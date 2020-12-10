@@ -1,15 +1,15 @@
 package com.robocafe.all.domain
 
-data class OrderPositionInfo(val menuPositionId: String,
-                             val positionId: String) {
+data class OrderPositionPoint(val menuPositionId: String,
+                              val positionId: String) {
     constructor(data: OrderPosition): this(data.menuPositionId, data.id)
 }
 
 data class OrderCreated(
         val id: String,
         val partyId: String,
-        val personId: String?,
-        val positions: Set<OrderPositionInfo>)
+        val personId: String,
+        val positions: Set<OrderPositionPoint>)
 
 data class OrderPriceChanged(
         val orderId: String,

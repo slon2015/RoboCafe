@@ -21,7 +21,7 @@ class SessionService @Autowired constructor(
         private val sessionRepository: SessionRepository
 ) {
 
-    private companion object Dsl {
+    internal companion object Dsl {
         private infix fun <T> T.operate(operation: T.() -> Unit) {
             operation(this)
         }
@@ -77,42 +77,23 @@ class SessionService @Autowired constructor(
             }
         }
 
-        private fun instantiateMember(uniqueMemberId: String, domainId: MemberId): ChatMemberInfo {
-            return ChatMemberInfo(
-                    uniqueMemberId,
-                    if (domainId is PartyMemberId) domainId.id else null,
-                    if (domainId is PersonMemberId) domainId.id else null,
-                    when(domainId) {
-                        is PersonMemberId -> ChatMemberType.PERSON
-                        is PartyMemberId -> ChatMemberType.PARTY
-                    }
-                )
-        }
-
-        private fun ChatMemberInfo.assertMemberIsValid(personService: PersonService, partyService: PartyService) {
-            val partyId = (if (type == ChatMemberType.PARTY) partyId else personId)
-                    ?: throw MemberWithoutDomainId()
+        private fun ChatMemberId.assertMemberIsValid(personService: PersonService, partyService: PartyService) {
             if (!partyService.notEndedPartyExists(partyId)) {
                 throw MembersPartyEnded()
             }
-            if (type == ChatMemberType.PERSON && !personService.personWithActivePartyExists(personId!!)) {
+            if (!personService.personWithActivePartyExists(personId)) {
                 throw InvalidPersonId()
             }
         }
 
-        private fun ChatInfo.assertMemberNotInChat(memberId: MemberId) {
-            if (members.map {
-                        when(memberId) {
-                            is PersonMemberId -> it.personId!!
-                            is PartyMemberId -> it.partyId!!
-                        }
-            }.any { it == memberId.id }) {
+        private fun ChatInfo.assertMemberNotInChat(partyId: String, personId: String) {
+            if (members.any { it.partyId == partyId && it.personId == personId }) {
                 throw MemberAlreadyInChat()
             }
         }
 
-        private fun ChatInfo.assertMemberInChat(uniqueMemberId: String) {
-            if (members.any {it.id == uniqueMemberId}) {
+        private fun ChatInfo.assertMemberInChat(partyId: String, personId: String) {
+            if (members.all {it.partyId != partyId || it.personId != personId}) {
                 throw MemberNotInChat()
             }
         }
@@ -125,7 +106,7 @@ class SessionService @Autowired constructor(
         }
 
         private infix fun OrderAuthorData.checkMemberIn(personService: PersonService): OrderAuthorData {
-            if (memberId != null && !personService.personWithActivePartyExists(memberId)) {
+            if (!personService.personWithActivePartyExists(memberId)) {
                 throw InvalidPerson()
             }
             return this
@@ -176,35 +157,31 @@ class SessionService @Autowired constructor(
         }
     }
 
-    fun startChat(chatId: String, memberIds: Set<MemberId>): ChatInfo {
-        val members = memberIds.map { instantiateMember(UUID.randomUUID().toString(), it) }.toSet()
-        members.forEach { it.assertMemberIsValid(personService, partyService) }
-        return chatService.startChat(chatId, members)
+    fun startChat(chatId: String, memberIds: Set<ChatMemberId>): ChatInfo {
+        memberIds.forEach { it.assertMemberIsValid(personService, partyService) }
+        return chatService.startChat(chatId, memberIds)
     }
 
     fun findChat(chatId: String) = chatService.findChat(chatId)
 
-    fun findChatMember(chatMemberId: String) = chatService.findChatMember(chatMemberId)
-
-    fun addMemberToChat(uniqueMemberId: String, chatId: String, idObject: MemberId) {
+    fun addMemberToChat(uniqueMemberId: String, chatId: String, member: ChatMemberId) {
         chatService.findChat(chatId) operate {
-            assertMemberNotInChat(idObject)
-            val member = instantiateMember(UUID.randomUUID().toString(), idObject)
+            assertMemberNotInChat(member.partyId, member.personId)
             member.assertMemberIsValid(personService, partyService)
             chatService.addMemberToChat(chatId, member)
         }
     }
 
-    fun removeMemberFromChat(chatId: String, memberId: String) {
+    fun removeMemberFromChat(chatId: String, memberId: ChatMemberId) {
         chatService.findChat(chatId) operate {
-            assertMemberInChat(memberId)
+            assertMemberInChat(memberId.partyId, memberId.personId)
             chatService.removeMemberFromChat(chatId, memberId)
         }
     }
 
-    fun sendMessage(messageId: String, chatId: String, memberId: String, text: String) {
+    fun sendMessage(messageId: String, chatId: String, memberId: ChatMemberId, text: String) {
         chatService.findChat(chatId) operate {
-            assertMemberInChat(memberId)
+            assertMemberInChat(memberId.partyId, memberId.personId)
             chatService.sendMessage(messageId, chatId, memberId, text)
         }
     }
