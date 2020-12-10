@@ -1,8 +1,34 @@
+CREATE TABLE `authentication` (
+  `id` int(11) NOT NULL,
+  `login` varchar(255) DEFAULT NULL,
+  `password` varchar(255) DEFAULT NULL,
+  `so_id` varchar(255) DEFAULT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
-SET NAMES utf8;
-SET time_zone = '+00:00';
-SET foreign_key_checks = 0;
-SET sql_mode = 'NO_AUTO_VALUE_ON_ZERO';
+
+CREATE TABLE `permission` (
+  `name` varchar(255) NOT NULL,
+  PRIMARY KEY (`name`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+
+CREATE TABLE `security_role` (
+  `name` varchar(255) NOT NULL,
+  PRIMARY KEY (`name`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+
+CREATE TABLE `security_object` (
+  `id` varchar(255) NOT NULL,
+  `domain_id` varchar(255) DEFAULT NULL,
+  `invalidated` bit(1) NOT NULL,
+  `role_id` varchar(255) NOT NULL,
+  PRIMARY KEY (`id`),
+  KEY `FKk0a2bb6vkx1mmo8hkl69sqm5m` (`role_id`),
+  CONSTRAINT `FKk0a2bb6vkx1mmo8hkl69sqm5m` FOREIGN KEY (`role_id`) REFERENCES `security_role` (`name`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
 
 CREATE TABLE `additional_permissions` (
   `object_id` varchar(255) NOT NULL,
@@ -25,21 +51,34 @@ CREATE TABLE `afiche` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 
-CREATE TABLE `authentication` (
-  `id` int(11) NOT NULL,
-  `login` varchar(255) DEFAULT NULL,
-  `password` varchar(255) DEFAULT NULL,
-  `so_id` varchar(255) DEFAULT NULL,
-  PRIMARY KEY (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
-
-
 CREATE TABLE `cafe_sessions` (
   `id` varchar(255) NOT NULL,
   `finished` bit(1) NOT NULL,
   `party_id` varchar(255) DEFAULT NULL,
   `table_id` varchar(255) DEFAULT NULL,
   PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+
+CREATE TABLE `person_ref_data` (
+  `person_id` varchar(255) NOT NULL,
+  PRIMARY KEY (`person_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+
+CREATE TABLE `person_ref_data_completed_order_ids` (
+  `person_ref_data_person_id` varchar(255) NOT NULL,
+  `completed_order_ids` varchar(255) DEFAULT NULL,
+  KEY `FKe33ou276k540ioq39i8k1dgq8` (`person_ref_data_person_id`),
+  CONSTRAINT `FKe33ou276k540ioq39i8k1dgq8` FOREIGN KEY (`person_ref_data_person_id`) REFERENCES `person_ref_data` (`person_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+
+CREATE TABLE `person_ref_data_order_ids` (
+  `person_ref_data_person_id` varchar(255) NOT NULL,
+  `order_ids` varchar(255) DEFAULT NULL,
+  KEY `FKc79tqjey48c6c2uibm9nnrhx6` (`person_ref_data_person_id`),
+  CONSTRAINT `FKc79tqjey48c6c2uibm9nnrhx6` FOREIGN KEY (`person_ref_data_person_id`) REFERENCES `person_ref_data` (`person_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 
@@ -68,6 +107,14 @@ CREATE TABLE `chat` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 
+CREATE TABLE `chat_member` (
+  `id` varchar(255) NOT NULL,
+  `party_id` varchar(255) DEFAULT NULL,
+  `person_id` varchar(255) DEFAULT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+
 CREATE TABLE `chat_chat_members` (
   `chat_id` varchar(255) NOT NULL,
   `members_id` varchar(255) NOT NULL,
@@ -75,14 +122,6 @@ CREATE TABLE `chat_chat_members` (
   KEY `FK46hnp86nmp69bn2960bx6tv8c` (`members_id`),
   CONSTRAINT `FK46hnp86nmp69bn2960bx6tv8c` FOREIGN KEY (`members_id`) REFERENCES `chat_member` (`id`),
   CONSTRAINT `FKilui4yhwoepdpt7i4ldqrqvj8` FOREIGN KEY (`chat_id`) REFERENCES `chat` (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
-
-
-CREATE TABLE `chat_member` (
-  `id` varchar(255) NOT NULL,
-  `party_id` varchar(255) DEFAULT NULL,
-  `person_id` varchar(255) DEFAULT NULL,
-  PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 
@@ -157,12 +196,6 @@ CREATE TABLE `payment` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 
-CREATE TABLE `permission` (
-  `name` varchar(255) NOT NULL,
-  PRIMARY KEY (`name`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
-
-
 CREATE TABLE `person` (
   `id` varchar(255) NOT NULL,
   `balance` double NOT NULL,
@@ -173,28 +206,6 @@ CREATE TABLE `person` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 
-CREATE TABLE `person_ref_data` (
-  `person_id` varchar(255) NOT NULL,
-  PRIMARY KEY (`person_id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
-
-
-CREATE TABLE `person_ref_data_completed_order_ids` (
-  `person_ref_data_person_id` varchar(255) NOT NULL,
-  `completed_order_ids` varchar(255) DEFAULT NULL,
-  KEY `FKe33ou276k540ioq39i8k1dgq8` (`person_ref_data_person_id`),
-  CONSTRAINT `FKe33ou276k540ioq39i8k1dgq8` FOREIGN KEY (`person_ref_data_person_id`) REFERENCES `person_ref_data` (`person_id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
-
-
-CREATE TABLE `person_ref_data_order_ids` (
-  `person_ref_data_person_id` varchar(255) NOT NULL,
-  `order_ids` varchar(255) DEFAULT NULL,
-  KEY `FKc79tqjey48c6c2uibm9nnrhx6` (`person_ref_data_person_id`),
-  CONSTRAINT `FKc79tqjey48c6c2uibm9nnrhx6` FOREIGN KEY (`person_ref_data_person_id`) REFERENCES `person_ref_data` (`person_id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
-
-
 CREATE TABLE `role_default_permissions` (
   `role_name` varchar(255) NOT NULL,
   `permission_name` varchar(255) NOT NULL,
@@ -202,23 +213,6 @@ CREATE TABLE `role_default_permissions` (
   KEY `FKp1lstuyob4f3j4eqifkv4dnge` (`permission_name`),
   CONSTRAINT `FKiv1545fdf8bjaf51hx6d17c1c` FOREIGN KEY (`role_name`) REFERENCES `security_role` (`name`),
   CONSTRAINT `FKp1lstuyob4f3j4eqifkv4dnge` FOREIGN KEY (`permission_name`) REFERENCES `permission` (`name`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
-
-
-CREATE TABLE `security_object` (
-  `id` varchar(255) NOT NULL,
-  `domain_id` varchar(255) DEFAULT NULL,
-  `invalidated` bit(1) NOT NULL,
-  `role_id` varchar(255) NOT NULL,
-  PRIMARY KEY (`id`),
-  KEY `FKk0a2bb6vkx1mmo8hkl69sqm5m` (`role_id`),
-  CONSTRAINT `FKk0a2bb6vkx1mmo8hkl69sqm5m` FOREIGN KEY (`role_id`) REFERENCES `security_role` (`name`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
-
-
-CREATE TABLE `security_role` (
-  `name` varchar(255) NOT NULL,
-  PRIMARY KEY (`name`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 
