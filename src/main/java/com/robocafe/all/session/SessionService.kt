@@ -64,9 +64,15 @@ class SessionService @Autowired constructor(
             }
         }
 
-        private fun PartyInfo.assertBalancePayed(sessionService: SessionService) {
+        private infix fun PartyInfo.assertBalancePayed(sessionService: SessionService) {
             if (sessionService.getUnpayedBalanceForParty(id) > 0) {
                 throw BalanceForPartyNotPayed()
+            }
+        }
+
+        private fun PersonInfo.assertBalancePayed(sessionService: SessionService) {
+            if (sessionService.getUnpayedBalanceForPerson(id) > 0) {
+                throw BalanceForPersonNotPayed()
             }
         }
 
@@ -146,7 +152,11 @@ class SessionService @Autowired constructor(
     fun removePersonFromParty(partyId: String, personId: String) {
         partyService.getParty(partyId) operate {
             assertPersonInParty(personId)
-            partyService.removePersonFromParty(partyId, personId)
+            personService.getPerson(personId) operate {
+                assertPersonHaveNoOpenOrdersIn(orderService)
+                assertBalancePayed(this@SessionService)
+                partyService.removePersonFromParty(partyId, personId)
+            }
         }
     }
 
@@ -218,22 +228,24 @@ class SessionService @Autowired constructor(
         orderService.finishPositionDelivering(orderId, positionId)
     }
 
-    fun startSession(tableId: String, partyId: String, membersCount: Int) {
+    fun startSession(tableId: String, partyId: String, membersCount: Int): PartyInfo {
+        lateinit var party: PartyInfo
         tableService.getTableInfo(tableId) operate {
             assertStatusEquals(TableStatus.FREE)
             tableService.occupyTable(tableId)
-            partyService.startParty(tableId, partyId, maxPersons, membersCount)
+            party = partyService.startParty(tableId, partyId, maxPersons, membersCount)
         }
+        return party
     }
 
-    fun endSession(partyId: String) {
-        partyService.getParty(partyId) operate {
+    fun endSessionForTable(tableId: String) {
+        partyService.getActivePartyForTable(tableId) operate {
             tableService.getTableInfo(tableId) operate {
                 assertStatusEquals(TableStatus.OCCUPIED)
             }
             assertMembersHaveNoOpenOrdersIn(orderService)
             assertBalancePayed(this@SessionService)
-            partyService.endParty(partyId)
+            partyService.endParty(id)
             tableService.releaseTable(tableId)
         }
     }

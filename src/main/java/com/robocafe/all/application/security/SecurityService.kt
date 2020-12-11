@@ -6,7 +6,8 @@ import java.util.*
 
 @Service
 class SecurityService @Autowired constructor(
-        private val objectRepository: ObjectRepository
+        private val objectRepository: ObjectRepository,
+        private val jwtProvider: JwtProvider
 ) {
 
     private fun registerSO(domainId: String, role: String): String {
@@ -17,7 +18,7 @@ class SecurityService @Autowired constructor(
                 role
         )
         objectRepository.save(so)
-        return soId
+        return jwtProvider.generateToken(SecurityObjectInfo(soId))
     }
 
     fun registerTable(tableId: String) = registerSO(tableId, "table")

@@ -7,7 +7,7 @@ import org.springframework.stereotype.Service
 @Service
 class PersonService @Autowired constructor(private val repository: PersonRepository) {
     @Throws(PersonNotFound::class)
-    fun findPerson(personId: String): PersonInfo {
+    fun getPerson(personId: String): PersonInfo {
         return PersonInfo(repository.findById(personId).orElseThrow { PersonNotFound() })
     }
 

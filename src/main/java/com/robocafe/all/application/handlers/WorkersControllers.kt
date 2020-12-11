@@ -12,7 +12,7 @@ import org.springframework.web.bind.annotation.RestController
 
 @RestController
 @RequestMapping("/workers/kitchen")
-class KitchenHandler @Autowired constructor(private val sessionService: SessionService) {
+class KitchenController @Autowired constructor(private val sessionService: SessionService) {
 
     @PostMapping("/{orderId}/position/{positionId}/start")
     fun startPositionPrepared(orderId: String, positionId: String) {
@@ -47,7 +47,7 @@ class KitchenHandler @Autowired constructor(private val sessionService: SessionS
 
 @RestController
 @RequestMapping("/workers/hall")
-class HallHandler @Autowired constructor(private val sessionService: SessionService) {
+class HallController @Autowired constructor(private val sessionService: SessionService) {
 
     @PostMapping("/order/{orderId}/position/{positionId}/deliver")
     fun finishPositionDelivering(orderId: String, positionId: String) {

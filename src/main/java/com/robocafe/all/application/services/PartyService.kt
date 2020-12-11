@@ -5,7 +5,6 @@ import com.robocafe.all.application.repositories.PartyRepository
 import kotlin.Throws
 import com.robocafe.all.domain.Party
 import com.robocafe.all.domain.Person
-import com.robocafe.all.domain.TableStatus
 import org.springframework.stereotype.Service
 import java.time.Instant
 
@@ -37,9 +36,13 @@ class PartyService @Autowired constructor(
     }
 
     @Throws(TableNotFound::class, TableNotFree::class, TablePersonsCountLowerThanPartyMembersCount::class)
-    fun startParty(tableId: String, partyId: String, maxMembersCount: Int, membersCount: Int) {
+    fun startParty(tableId: String, partyId: String, maxMembersCount: Int, membersCount: Int): PartyInfo {
         val newParty = Party.startParty(partyId, tableId, maxMembersCount, membersCount)
-        repository.save(newParty)
+        return PartyInfo(repository.save(newParty))
+    }
+
+    fun getActivePartyForTable(tableId: String): PartyInfo {
+        return PartyInfo(repository.findByTableIdAndEndTimeIsNull(tableId) ?: throw PartyNotFound())
     }
 
     private fun findNotEndedParty(partyId: String): Party {

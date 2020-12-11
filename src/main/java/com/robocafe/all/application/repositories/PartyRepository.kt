@@ -7,4 +7,5 @@ import org.springframework.stereotype.Repository
 @Repository
 interface PartyRepository : JpaRepository<Party, String> {
     fun existsByIdAndEndTimeIsNull(id: String): Boolean
+    fun findByTableIdAndEndTimeIsNull(tableId: String): Party?
 }

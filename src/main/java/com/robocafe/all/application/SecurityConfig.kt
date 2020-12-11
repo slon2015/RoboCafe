@@ -39,6 +39,7 @@ class SecurityConfig @Autowired constructor(
                     .antMatchers(HttpMethod.GET, "/workers/kitchen/view/**").hasAuthority("kitchen_view")
                     .antMatchers(HttpMethod.POST,"/workers/hall/**").hasAuthority("hall_managment")
                     .antMatchers(HttpMethod.GET, "/workers/hall/view/**").hasAuthority("hall_view")
+                    .antMatchers("/tables/**").hasRole("table")
                     .anyRequest().permitAll()
                 .and()
                 .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter::class.java)

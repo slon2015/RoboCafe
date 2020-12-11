@@ -15,7 +15,7 @@ class Person(@field:Id val id: String,
 
 @Entity
 class Party(@field:Id val id: String, val tableId: String, val maxMembers: Int) : AbstractAggregateRoot<Party?>() {
-    @OneToMany(mappedBy = "party")
+    @OneToMany(mappedBy = "party", cascade = [CascadeType.ALL])
     var members: MutableSet<Person> = HashSet()
     var endTime: Instant? = null
     val isMemberless
@@ -23,14 +23,7 @@ class Party(@field:Id val id: String, val tableId: String, val maxMembers: Int) 
     val balance
         get() = members.map { it.balance }.sum()
 
-    constructor(id: String, tableId: String, maxMembers: Int, memberCount: Int) : this(id, tableId, maxMembers) {
-        var i = 0
-        while (i < memberCount && i < maxMembers) {
-            val personId = UUID.randomUUID().toString()
-            joinPersonToParty(personId)
-            i++
-        }
-    }
+    constructor(id: String, tableId: String, maxMembers: Int, memberCount: Int) : this(id, tableId, maxMembers)
 
     fun isEnded() = endTime == null
 
@@ -61,6 +54,12 @@ class Party(@field:Id val id: String, val tableId: String, val maxMembers: Int) 
         fun startParty(id: String, tableId: String, maxMembers: Int, memberCount: Int): Party {
             val party = Party(id, tableId, maxMembers, memberCount)
             party.registerEvent(PartyStarted(id, tableId))
+            var i = 0
+            while (i < memberCount && i < maxMembers) {
+                val personId = UUID.randomUUID().toString()
+                party.joinPersonToParty(personId)
+                i++
+            }
             return party
         }
     }

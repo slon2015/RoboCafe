@@ -4,7 +4,6 @@ import com.robocafe.all.application.services.DomainException
 import com.robocafe.all.application.services.EntityNotFound
 import com.robocafe.all.application.services.OrderInfo
 
-class SessionNotFound: EntityNotFound()
 class IncorrectTableStatus: DomainException()
 
 class PartyAlreadyFull: DomainException()
@@ -14,8 +13,8 @@ class PersonHasOpenOrders(val orders: Set<OrderInfo>): DomainException()
 
 class PaymentTargetBalanceLowerThanAmount: DomainException()
 class BalanceForPartyNotPayed: DomainException()
+class BalanceForPersonNotPayed: DomainException()
 
-class MemberWithoutDomainId: DomainException()
 class MembersPartyEnded: DomainException()
 class InvalidPersonId: DomainException()
 class MemberAlreadyInChat: DomainException()
