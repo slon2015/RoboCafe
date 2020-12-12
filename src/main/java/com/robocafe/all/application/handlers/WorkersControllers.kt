@@ -1,14 +1,13 @@
 package com.robocafe.all.application.handlers
 
-import com.robocafe.all.application.services.OrderInfo
-import com.robocafe.all.application.services.OrderPositionInfo
-import com.robocafe.all.application.services.TableInfo
+import com.robocafe.all.application.handlers.models.PaymentStatusChangeModel
+import com.robocafe.all.application.security.SecurityService
+import com.robocafe.all.application.services.*
+import com.robocafe.all.domain.PaymentStatus
 import com.robocafe.all.session.SessionService
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.web.bind.annotation.GetMapping
-import org.springframework.web.bind.annotation.PostMapping
-import org.springframework.web.bind.annotation.RequestMapping
-import org.springframework.web.bind.annotation.RestController
+import org.springframework.transaction.annotation.Transactional
+import org.springframework.web.bind.annotation.*
 
 @RestController
 @RequestMapping("/workers/kitchen")
@@ -47,7 +46,11 @@ class KitchenController @Autowired constructor(private val sessionService: Sessi
 
 @RestController
 @RequestMapping("/workers/hall")
-class HallController @Autowired constructor(private val sessionService: SessionService) {
+@Transactional
+class HallController @Autowired constructor(
+        private val sessionService: SessionService,
+        private val securityService: SecurityService
+) {
 
     @PostMapping("/order/{orderId}/position/{positionId}/deliver")
     fun finishPositionDelivering(orderId: String, positionId: String) {
@@ -59,8 +62,32 @@ class HallController @Autowired constructor(private val sessionService: SessionS
         sessionService.cleanTable(tableId)
     }
 
+    @PostMapping("/payment/{paymentId}")
+    fun changePaymentStatus(@PathVariable paymentId: String, @RequestBody body: PaymentStatusChangeModel) {
+        when (body.newStatus) {
+            PaymentStatus.OFFICIANT_MOVING -> sessionService.officiantMovedOutForPayment(paymentId)
+            PaymentStatus.OFFICIANT_AWAITING_PAYMENT -> sessionService.officiantWaitsForPayment(paymentId)
+            PaymentStatus.AWAITS_CONFIRMATION -> sessionService.paymentWaitsConfirmation(paymentId)
+            else -> return
+        }
+    }
+
+    @PostMapping("/payment/{paymentId}/confirm")
+    fun confirmPayment(@PathVariable paymentId: String) {
+        sessionService.confirmPayment(paymentId)
+    }
+
+    @PostMapping("/payment/{paymentId}/fail")
+    fun failPayment(@PathVariable paymentId: String) {
+        sessionService.failPayment(paymentId)
+    }
+
     @GetMapping("/view/tables")
     fun getAllTablesInfo(): Set<TableInfo> {
         return sessionService.getAllTablesInfo()
     }
+
+    @GetMapping("/view/payments")
+    fun getActivePayments(): Set<PaymentInfo> = sessionService.getActivePayments()
+
 }

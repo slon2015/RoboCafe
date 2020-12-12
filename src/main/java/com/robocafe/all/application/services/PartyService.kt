@@ -45,6 +45,11 @@ class PartyService @Autowired constructor(
         return PartyInfo(repository.findByTableIdAndEndTimeIsNull(tableId) ?: throw PartyNotFound())
     }
 
+    fun getPartyForPerson(personId: String): PartyInfo {
+        return PartyInfo(repository.findByEndTimeIsNullAndMembersIdEquals(personId)
+                ?: throw PartyNotFound())
+    }
+
     private fun findNotEndedParty(partyId: String): Party {
         val party = repository.findById(partyId).orElseThrow { PartyNotFound() }!!
         if (party.endTime == null) {

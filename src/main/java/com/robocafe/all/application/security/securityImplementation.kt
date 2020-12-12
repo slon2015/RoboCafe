@@ -20,9 +20,9 @@ import javax.servlet.http.HttpServletRequest
 fun convertObjectToUserDetails(securityObject: Object): ObjectUserDetails {
     return ObjectUserDetails(
             securityObject.id,
-            securityObject.role!!.name,
+            securityObject.role.name,
             securityObject.domainId,
-            setOf(securityObject.role!!.permission, securityObject.additionalPermissions).flatten()
+            setOf(securityObject.role.permission, securityObject.additionalPermissions).flatten()
                     .map { it.name },
             securityObject.invalidated
     )

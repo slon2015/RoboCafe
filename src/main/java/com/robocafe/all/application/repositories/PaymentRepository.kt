@@ -11,4 +11,14 @@ interface PaymentRepository: JpaRepository<Payment, String> {
     fun findAllByPartyIdAndStatusEqualsConfirmed(partyId: String): Set<Payment>
     @Query("SELECT p FROM Payment p WHERE personId = ?1 AND status = 'CONFIRMED'")
     fun findAllByPersonIdAndStatusEqualsConfirmed(personId: String): Set<Payment>
+    @Query("SELECT CASE WHEN COUNT(p)> 0 THEN TRUE ELSE FALSE END " +
+            "FROM Payment p WHERE partyId = ?1 AND personId = ?2 " +
+            "AND status != 'CONFIRMED' AND status != 'FAILED'")
+    fun existsActivePaymentsForPartyAndPerson(partyId: String, personId: String): Boolean
+    @Query("SELECT CASE WHEN COUNT(p)> 0 THEN TRUE ELSE FALSE END " +
+            "FROM Payment p WHERE partyId = ?1 " +
+            "AND status != 'CONFIRMED' AND status != 'FAILED'")
+    fun existsByPartyIdAndStatusNotIsConfirmedAndStatusNotIsFailed(partyId: String): Boolean
+    @Query("SELECT p FROM Payment p WHERE status != 'CONFIRMED' AND status != 'FAILED'")
+    fun findAllActivePayments(): Set<Payment>
 }

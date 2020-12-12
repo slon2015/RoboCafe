@@ -46,14 +46,20 @@ class SessionService @Autowired constructor(
 
         private fun PartyInfo.assertUnpayedBalanceGreaterOrEquals(target: PaymentTarget,
                                                                   amount: Double,
-                                                                  orderService: OrderService,
-                                                                  paymentService: PaymentService) {
-            val balance = if (target.personId == null) orderService.getBalanceForParty(id)
-                else orderService.getBalanceForPerson(target.personId)
-            val payedBalance = if (target.personId == null) paymentService.getConfirmedPaymentsAmountForParty(id)
-                else paymentService.getConfirmedPaymentsAmountForPerson(target.personId)
-            if (balance - payedBalance < amount) {
-                throw PaymentTargetBalanceLowerThanAmount()
+                                                                  sessionService: SessionService) {
+            val unpayedBalance = if (target.personId != null)
+                sessionService.getUnpayedBalanceForPerson(target.personId)
+            else
+                sessionService.getUnpayedBalanceForParty(target.partyId)
+            if (unpayedBalance < amount) {
+                throw InvalidPaymentAmount()
+            }
+        }
+
+        private fun PartyInfo.assertUnpayedBalanceEquals(amount: Double,
+                                                         sessionService: SessionService) {
+            if (sessionService.getUnpayedBalanceForParty(id) != amount) {
+                throw InvalidPaymentAmount()
             }
         }
 
@@ -122,6 +128,23 @@ class SessionService @Autowired constructor(
             return map { it to positionService.getPositionInfo(it.menuPositionId) }
                     .map { it.second.price * it.first.count }.sum()
         }
+
+        private fun Set<OrderPositionData>.assertOrderNotEmpty() {
+            if (isEmpty()) {
+                throw OrderContentIsEmpty()
+            }
+            forEach {
+                if (it.count <= 0) {
+                    throw InvalidOrderPosition()
+                }
+            }
+        }
+
+        private fun assertAmountGreaterThanZero(amount: Double) {
+            if (amount <= 0.0) {
+                throw PaymentAmountLowerOrEqualsZero()
+            }
+        }
     }
 
     fun registerTable(tableId: String, tableNumber: Int, maxPersons: Int) {
@@ -139,6 +162,7 @@ class SessionService @Autowired constructor(
     fun getAllTablesInfo() = tableService.getAllTablesInfo()
 
     fun getParty(partyId: String) = partyService.getParty(partyId)
+    fun getPartyForPerson(personId: String) = partyService.getPartyForPerson(personId)
 
     fun notEndedPartyExists(partyId: String) = partyService.notEndedPartyExists(partyId)
 
@@ -196,10 +220,12 @@ class SessionService @Autowired constructor(
         }
     }
 
-    fun createOrder(id: String, orderAuthorData: OrderAuthorData, positions: Set<OrderPositionData>) {
+    fun createOrder(orderAuthorData: OrderAuthorData, positions: Set<OrderPositionData>): OrderInfo {
+        positions.assertOrderNotEmpty()
         orderAuthorData checkPartyIn(partyService) checkMemberIn(personService)
         val price = positions calculatePriceWith positionService
-        orderService.createOrder(id, orderAuthorData, positions, price)
+        val orderId = UUID.randomUUID().toString()
+        return orderService.createOrder(orderId, orderAuthorData, positions, price)
     }
 
     fun getUnpayedBalanceForParty(partyId: String) =
@@ -243,6 +269,12 @@ class SessionService @Autowired constructor(
             tableService.getTableInfo(tableId) operate {
                 assertStatusEquals(TableStatus.OCCUPIED)
             }
+            endSession(this)
+        }
+    }
+
+    fun endSession(party: PartyInfo) {
+        party operate {
             assertMembersHaveNoOpenOrdersIn(orderService)
             assertBalancePayed(this@SessionService)
             partyService.endParty(id)
@@ -250,14 +282,21 @@ class SessionService @Autowired constructor(
         }
     }
 
-    fun createPayment(paymentId: String, target: PaymentTarget, amount: Double) {
+    fun createPayment(target: PaymentTarget, amount: Double): PaymentInfo {
+        lateinit var payment: PaymentInfo
+        val paymentId = UUID.randomUUID().toString()
         partyService.getParty(target.partyId) operate {
+            assertAmountGreaterThanZero(amount)
             if (target.personId != null) {
                 assertPersonInParty(target.personId)
+                assertUnpayedBalanceGreaterOrEquals(target, amount, this@SessionService)
             }
-            assertUnpayedBalanceGreaterOrEquals(target, amount, orderService, paymentService)
-            paymentService.createPayment(paymentId, target, amount)
+            else {
+                assertUnpayedBalanceEquals(amount, this@SessionService)
+            }
+            payment = paymentService.createPayment(paymentId, target, amount)
         }
+        return payment
     }
 
     fun officiantMovedOutForPayment(paymentId: String) {
@@ -276,9 +315,16 @@ class SessionService @Autowired constructor(
         paymentService.paymentWaitsConfirmation(paymentId)
     }
 
-    fun paymentConfirmed(paymentId: String) {
-        paymentService.paymentConfirmed(paymentId)
+    fun confirmPayment(paymentId: String) {
+        paymentService.getPayment(paymentId) operate {
+            paymentService.confirmPayment(paymentId)
+            if (personId != null) {
+                endSession(partyService.getParty(partyId))
+            }
+        }
     }
+
+    fun getActivePayments() = paymentService.getActivePayments()
 
     fun getOpenOrders() = orderService.getOpenOrders()
     fun getPositionsForOrderThatWaitsForPreparing(orderId: String) =

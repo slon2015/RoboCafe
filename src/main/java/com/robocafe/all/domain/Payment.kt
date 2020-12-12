@@ -43,4 +43,15 @@ class Payment(
         changeStatus(PaymentStatus.CONFIRMED)
         registerEvent(PaymentConfirmed(id))
     }
+
+    companion object {
+        fun startPayment(id: String,
+                         partyId: String,
+                         personId: String?,
+                         amount: Double): Payment {
+            val payment = Payment(id, partyId, personId, amount)
+            payment.registerEvent(PaymentCreated(id, partyId, personId, amount))
+            return payment
+        }
+    }
 }

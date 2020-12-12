@@ -27,16 +27,16 @@ class Role (
 @Table(name = "security_object")
 class Object (
         @field:Id val id: String,
-        val domainId: String,
+        val domainId: String?,
         @field:ManyToOne(optional = false)
         @field:JoinColumn(name = "roleId")
-        var role: Role?,
+        var role: Role,
         @field:ManyToMany(fetch = FetchType.EAGER)
         @field:JoinTable(name = "additional_permissions")
         val additionalPermissions: MutableSet<Permission>,
         var invalidated: Boolean = false
 ) {
-        constructor(id: String, domainId: String, roleId: String):
+        constructor(id: String, domainId: String?, roleId: String):
                 this(id, domainId, Role(roleId), mutableSetOf())
 }
 
@@ -58,4 +58,6 @@ interface AuthenticationRepository: JpaRepository<Authentication, Int> {
 }
 
 @Repository
-interface ObjectRepository: JpaRepository<Object, String>
+interface ObjectRepository: JpaRepository<Object, String> {
+    fun findByDomainIdAndRoleName(domainId: String, roleName: String): Object?
+}

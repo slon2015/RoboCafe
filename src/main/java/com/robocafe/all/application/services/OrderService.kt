@@ -85,13 +85,15 @@ class OrderService @Autowired constructor(
         orderRepository.save(this)
     }
 
-    fun createOrder(id: String, orderAuthorData: OrderAuthorData, positions: Set<OrderPositionData>, price: Double) {
-        Order.createOrder(
+    fun createOrder(id: String, orderAuthorData: OrderAuthorData, positions: Set<OrderPositionData>, price: Double): OrderInfo {
+        val result = Order.createOrder(
             id,
             orderAuthorData.partyId,
             orderAuthorData.memberId,
             positions, price
-        ).saveChanges()
+        )
+        result.saveChanges()
+        return OrderInfo(result)
     }
 
     fun getBalanceForParty(partyId: String) =

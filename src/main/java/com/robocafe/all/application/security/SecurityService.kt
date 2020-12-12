@@ -10,6 +10,13 @@ class SecurityService @Autowired constructor(
         private val jwtProvider: JwtProvider
 ) {
 
+    companion object {
+        const val TABLE_ROLE = "table"
+        const val PARTY_ROLE = "party"
+        const val PERSON_ROLE = "person"
+        const val WORKER_ROLE = "worker"
+    }
+
     private fun registerSO(domainId: String, role: String): String {
         val soId = UUID.randomUUID().toString()
         val so = Object(
@@ -21,15 +28,29 @@ class SecurityService @Autowired constructor(
         return jwtProvider.generateToken(SecurityObjectInfo(soId))
     }
 
-    fun registerTable(tableId: String) = registerSO(tableId, "table")
-    fun registerParty(partyId: String) = registerSO(partyId, "party")
-    fun registerPerson(personId: String) = registerSO(personId, "person")
-    fun registerWorker(workerId: String) = registerSO(workerId, "worker")
+    fun registerTable(tableId: String) = registerSO(tableId, TABLE_ROLE)
+    fun registerParty(partyId: String) = registerSO(partyId, PARTY_ROLE)
+    fun registerPerson(personId: String) = registerSO(personId, PERSON_ROLE)
+    fun registerWorker(workerId: String) = registerSO(workerId, WORKER_ROLE)
+
+    fun invalidateSOFor(domainId: String, role: String) {
+        val so = findSecurityObjectFor(domainId, role)
+        so.invalidated = true
+        objectRepository.save(so)
+    }
 
     fun invalidateSO(soId: String) {
         val so = findSecurityObject(soId)
         so.invalidated = true
         objectRepository.save(so)
+    }
+
+    fun findSecurityObjectFor(domainId: String, role: String): Object {
+        val so = objectRepository.findByDomainIdAndRoleName(domainId, role) ?: throw SecurityObjectNotFound()
+        if (so.invalidated) {
+            throw SecurityObjectInvalidated()
+        }
+        return so
     }
 
     fun findSecurityObject(soId: String): Object {

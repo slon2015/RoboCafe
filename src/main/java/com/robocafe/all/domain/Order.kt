@@ -47,10 +47,10 @@ class Order(
     @Enumerated(EnumType.STRING)
     var closeCause: CloseCause? = null
 
-    @OneToMany(mappedBy = "order")
+    @OneToMany(mappedBy = "order", cascade = [CascadeType.ALL])
     val positions: Set<OrderPosition> = positions.flatMap {
         val mapped = mutableSetOf<OrderPosition>()
-        for (i in 0 .. it.count) {
+        for (i in 1 .. it.count) {
             mapped.add(OrderPosition(
                     UUID.randomUUID().toString(),
                     it.menuPositionId,

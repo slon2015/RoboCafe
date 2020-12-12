@@ -18,7 +18,9 @@ data class PaymentInfo(
         val amount: Double,
         var status: PaymentStatus = PaymentStatus.SCHEDULED
 ) {
-    constructor(data: Payment): this(data.id, data.partyId, data.personId, data.amount, data.status)
+    constructor(data: Payment): this(
+            data.id, data.partyId, data.personId, data.amount, data.status
+    )
 }
 
 @Service
@@ -41,14 +43,29 @@ class PaymentService @Autowired constructor(
                 throw InvalidPaymentStatus()
             }
         }
+
+        private infix fun PaymentTarget.assertActivePaymentsDoesNotExistsIn(paymentRepository: PaymentRepository) {
+            if (personId != null) {
+                if (paymentRepository.existsActivePaymentsForPartyAndPerson(partyId, personId)) {
+                    throw AlreadyHaveActivePayment()
+                }
+            } else {
+                if (paymentRepository.existsByPartyIdAndStatusNotIsConfirmedAndStatusNotIsFailed(partyId)) {
+                    throw AlreadyHaveActivePayment()
+                }
+            }
+        }
     }
-    fun createPayment(paymentId: String, target: PaymentTarget, amount: Double) {
-        Payment(
+    fun createPayment(paymentId: String, target: PaymentTarget, amount: Double): PaymentInfo {
+        target assertActivePaymentsDoesNotExistsIn paymentRepository
+        val result = Payment.startPayment(
                 paymentId,
                 target.partyId,
                 target.personId,
                 amount
-        ).saveChanges()
+        )
+        result.saveChanges()
+        return PaymentInfo(result)
     }
 
     private fun Payment.saveChanges() {
@@ -90,7 +107,7 @@ class PaymentService @Autowired constructor(
         }
     }
 
-    fun paymentConfirmed(paymentId: String) {
+    fun confirmPayment(paymentId: String) {
         findPayment(paymentId) operate {
             assertStatusEquals(PaymentStatus.AWAITS_CONFIRMATION)
             confirm()
@@ -104,4 +121,6 @@ class PaymentService @Autowired constructor(
     fun getConfirmedPaymentsAmountForParty(partyId: String) =
             paymentRepository.findAllByPartyIdAndStatusEqualsConfirmed(partyId)
                     .map { it.amount }.sum()
+    fun getPayment(paymentId: String) = PaymentInfo(findPayment(paymentId))
+    fun getActivePayments() = paymentRepository.findAllActivePayments().map { PaymentInfo(it) }.toSet()
 }

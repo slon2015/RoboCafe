@@ -11,9 +11,12 @@ class PersonNotInParty: DomainException()
 class PartyHasOpenOrders(val orders: Set<OrderInfo>): DomainException()
 class PersonHasOpenOrders(val orders: Set<OrderInfo>): DomainException()
 
-class PaymentTargetBalanceLowerThanAmount: DomainException()
+class InvalidPaymentAmount: DomainException()
 class BalanceForPartyNotPayed: DomainException()
 class BalanceForPersonNotPayed: DomainException()
+class PaymentAmountLowerOrEqualsZero: DomainException()
+class OrderContentIsEmpty: DomainException()
+class InvalidOrderPosition: DomainException()
 
 class MembersPartyEnded: DomainException()
 class InvalidPersonId: DomainException()
