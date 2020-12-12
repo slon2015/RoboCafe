@@ -1,5 +1,5 @@
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
-import org.springframework.boot.gradle.tasks.run.BootRun
+import org.springframework.boot.gradle.tasks.bundling.BootBuildImage
 
 plugins {
     id("org.springframework.boot") version "2.4.0"
@@ -51,4 +51,14 @@ tasks.withType<KotlinCompile> {
         jvmTarget = "1.8"
     }
 }
+
+tasks.withType<org.springframework.boot.gradle.tasks.bundling.BootJar> {
+    exclude("application-*.yml")
+}
+
+tasks.withType<BootBuildImage> {
+    imageName = "rc_all"
+}
+
+
 
