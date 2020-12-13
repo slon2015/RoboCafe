@@ -47,7 +47,7 @@ spec:
               mountPath: "/config"
               readOnly: true
           envFrom:
-            - prefix: "DATA_STORE"
+            - prefix: "DATA_STORE_"
               secretRef:
                 name: "{{ include "rc_all.fullname" . }}.data.store.secret"
           imagePullPolicy: {{ .Values.image.pullPolicy }}

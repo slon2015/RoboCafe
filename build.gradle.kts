@@ -10,7 +10,7 @@ plugins {
 }
 
 group = "com.robocafe.all"
-version = "0.0.1-SNAPSHOT"
+version = "0.0.1"
 java.sourceCompatibility = JavaVersion.VERSION_1_8
 
 repositories {
@@ -58,6 +58,7 @@ tasks.withType<org.springframework.boot.gradle.tasks.bundling.BootJar> {
 
 tasks.withType<BootBuildImage> {
     imageName = "rc_all"
+    version
 }
 
 

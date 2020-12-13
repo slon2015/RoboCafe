@@ -9,3 +9,5 @@ rc_all:
     flyway:
       username: 'cm9vdAo='
       password: 'YWRtaW4K'
+image:
+  tag: "0.0.1"
