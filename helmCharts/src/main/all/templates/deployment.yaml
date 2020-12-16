@@ -33,11 +33,13 @@ spec:
             {{- toYaml .Values.securityContext | nindent 12 }}
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
           env:
-            - name: DATA_STORE_DRIVER
+            - name: SPRING_PROFILES_ACTIVE
+              value: "{{ .Values.rc_all.profiles }}"
+            - name: SPRING_DATASOURCE_DRIVERCLASSNAME
               value: "{{ .Values.rc_all.dataSource.driver }}"
             - name: SPRING_CONFIG_LOCATION
               value: "/config/config.yml"
-            - name: JWT_SECRET_KEY
+            - name: JWT_SECRET
               valueFrom:
                 secretKeyRef:
                   name: "{{ include "rc_all.fullname" . }}.jwt.secret"
@@ -47,7 +49,7 @@ spec:
               mountPath: "/config"
               readOnly: true
           envFrom:
-            - prefix: "DATA_STORE_"
+            - prefix: "SPRING_DATASOURCE_"
               secretRef:
                 name: "{{ include "rc_all.fullname" . }}.data.store.secret"
           imagePullPolicy: {{ .Values.image.pullPolicy }}

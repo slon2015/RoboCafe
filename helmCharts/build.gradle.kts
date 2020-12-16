@@ -15,6 +15,6 @@ helm {
 }
 
 tasks.getByName("helmPackageAllChart") {
-    dependsOn(parent!!.tasks.getByName("bootBuildImage"))
+    dependsOn(":bootBuildImage")
 }
 

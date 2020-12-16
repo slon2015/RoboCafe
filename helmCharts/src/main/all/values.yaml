@@ -5,7 +5,7 @@
 replicaCount: 1
 
 image:
-  repository: rc_all
+  repository: robocafe/all
   pullPolicy: IfNotPresent
   # Overrides the image tag whose default is the chart appVersion.
   tag: "latest" # TODO fix versioning
@@ -14,7 +14,7 @@ imagePullSecrets: []
 nameOverride: ""
 fullnameOverride: ""
 rc_all:
-  activeProfiles:
+  profiles:
   configurationMapName:
   jwtKey:
   dataSource:
