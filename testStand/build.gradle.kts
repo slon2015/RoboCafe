@@ -1,6 +1,14 @@
 import com.github.rmee.cli.base.Cli
+import com.github.rmee.kubectl.KubectlExecSpec
+import com.github.rmee.kubectl.KubectlExtension
 import com.google.cloud.tools.minikube.MinikubeTask
 import org.springframework.boot.gradle.tasks.bundling.BootBuildImage
+
+fun KubectlExtension.exec(action: KubectlExecSpec.() -> Unit) {
+    val spec = KubectlExecSpec()
+    project.configure(spec, closureOf(action))
+    exec(spec)
+}
 
 plugins {
     id("org.unbroken-dome.helm-releases") version "1.3.0"
@@ -45,7 +53,10 @@ tasks.create("prepareForBuildImages") {
 
 tasks.register("createAllConfigMap") {
     group = "setup"
-    kubectl.exec("delete configmap robocafeall")
+    kubectl.exec {
+        commandLine = listOf("kubectl","delete","configmap","robocafeall")
+        isIgnoreExitValue = true
+    }
     kubectl.exec("create configmap robocafeall --from-file=./all/config.yml")
 }
 
