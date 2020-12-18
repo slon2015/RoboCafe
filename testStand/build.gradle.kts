@@ -21,10 +21,27 @@ val allConfigMapName = "robocafeall"
 group = "com.robocafe.all"
 
 helm {
+    repositories {
+        create("bitnami") {
+            url("https://charts.bitnami.com/bitnami")
+        }
+        create("cetic") {
+            url("https://cetic.github.io/helm-charts")
+        }
+    }
     releases {
+        create("adminer") {
+            from("cetic/adminer")
+        }
+        create("persistence") {
+            from("bitnami/mariadb")
+            valueFiles.setFrom("./services/mariadbValues.yml")
+            wait.set(true)
+        }
         create("all") {
             from(chart(project = ":helmCharts", chart = "all"))
             valueFiles.setFrom("./all/values.yml")
+            mustInstallAfter("persistence")
         }
     }
 }
@@ -37,17 +54,20 @@ kubectl {
 }
 
 tasks.getByName("minikubeStart", MinikubeTask::class) {
-    flags = arrayOf("--vm-driver=docker")
+    flags = arrayOf("--driver=docker")
 }
 
 tasks.create("prepareForBuildImages") {
-    val dockerEnv = minikube.getDockerEnv("minikube")
-    parent!!.tasks.withType<BootBuildImage> {
-        docker {
-            host = dockerEnv["DOCKER_HOST"]
-            certPath = dockerEnv["DOCKER_CERT_PATH"]
-            isTlsVerify = dockerEnv["DOCKER_TLS_VERIFY"] == "1"
+    if (!project.hasProperty("localDocker")) {
+        val dockerEnv = minikube.getDockerEnv("minikube")
+        parent!!.tasks.withType<BootBuildImage> {
+            docker {
+                host = dockerEnv["DOCKER_HOST"]
+                certPath = dockerEnv["DOCKER_CERT_PATH"]
+                isTlsVerify = dockerEnv["DOCKER_TLS_VERIFY"] == "1"
+            }
         }
+        mustRunAfter("minikubeStart")
     }
 }
 
