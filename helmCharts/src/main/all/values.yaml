@@ -18,6 +18,7 @@ rc_all:
   configurationMapName:
   jwtKey:
   dataSource:
+    hibernateDialect:
     connectionString:
     driver:
     username:

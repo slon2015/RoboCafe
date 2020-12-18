@@ -5,6 +5,7 @@ rc_all:
   dataSource:
     connectionString: 'jdbc:mariadb://persistence-mariadb.default.svc.cluster.local:3306/app_database'
     driver: org.mariadb.jdbc.Driver
+    hibernateDialect: org.hibernate.dialect.MariaDBDialect
     username: 'root'
     password: 'admin'
     flyway:

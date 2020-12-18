@@ -37,8 +37,10 @@ spec:
               value: "{{ .Values.rc_all.profiles }}"
             - name: SPRING_DATASOURCE_DRIVERCLASSNAME
               value: "{{ .Values.rc_all.dataSource.driver }}"
-            - name: SPRING_CONFIG_LOCATION
-              value: "/config/config.yml"
+              {{- if not empty .Values.rc_all.dataSource.hibernateDialect }}
+            - name: SPRING_JPA_PROPERTIES_HIBERNATE_DIALECT
+              value: "{{ .Values.rc_all.dataSource.hibernateDialect }}"
+              {{- end }}
             - name: JWT_SECRET
               valueFrom:
                 secretKeyRef:
@@ -73,7 +75,7 @@ spec:
             name: "{{ .Values.rc_all.configurationMapName }}"
             items:
               - key: config.yml
-                path: config.yml
+                path: application.yml
       {{- with .Values.nodeSelector }}
       nodeSelector:
         {{- toYaml . | nindent 8 }}
