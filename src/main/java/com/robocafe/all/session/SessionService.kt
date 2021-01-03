@@ -158,6 +158,25 @@ class SessionService @Autowired constructor(
         }
     }
 
+    data class TableInitInfo(
+            val tableId: String,
+            val tableStatus: TableStatus,
+            val partyId: String?,
+            val persons: List<String>?
+
+    )
+
+    fun getInitDataForTable(tableId: String): TableInitInfo {
+        val table = tableService.getTableInfo(tableId)
+        val party = if(table.status == TableStatus.OCCUPIED) partyService.getActivePartyForTable(tableId) else null
+        return TableInitInfo(
+                table.id,
+                table.status,
+                party?.id,
+                party?.members?.map { it.id }
+        )
+    }
+
     fun getTableInfo(tableId: String) = tableService.getTableInfo(tableId)
     fun getAllTablesInfo() = tableService.getAllTablesInfo()
 

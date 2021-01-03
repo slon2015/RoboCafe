@@ -4,6 +4,10 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 import java.util.*
 
+fun Object.toSecurityObjectInfo(): SecurityObjectInfo {
+    return SecurityObjectInfo(this.id)
+}
+
 @Service
 class SecurityService @Autowired constructor(
         private val objectRepository: ObjectRepository,
@@ -25,7 +29,7 @@ class SecurityService @Autowired constructor(
                 role
         )
         objectRepository.save(so)
-        return jwtProvider.generateToken(SecurityObjectInfo(soId))
+        return jwtProvider.generateToken(so.toSecurityObjectInfo())
     }
 
     fun registerTable(tableId: String) = registerSO(tableId, TABLE_ROLE)
@@ -59,5 +63,13 @@ class SecurityService @Autowired constructor(
             throw SecurityObjectInvalidated()
         }
         return so
+    }
+
+    fun findToken(soId: String): String {
+        return jwtProvider.generateToken(findSecurityObject(soId).toSecurityObjectInfo())
+    }
+
+    fun findTokenFor(domainId: String, role: String): String {
+        return jwtProvider.generateToken(findSecurityObjectFor(domainId, role).toSecurityObjectInfo())
     }
 }
