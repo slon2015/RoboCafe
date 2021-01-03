@@ -57,17 +57,19 @@ tasks.getByName("minikubeStart", MinikubeTask::class) {
     flags = arrayOf("--driver=docker")
 }
 
-tasks.create("prepareForBuildImages") {
+fun BootBuildImage.selectMinikubeDocker() {
+    val dockerEnv = minikube.getDockerEnv("minikube")
+    docker {
+        host = dockerEnv["DOCKER_HOST"]
+        certPath = dockerEnv["DOCKER_CERT_PATH"]
+        isTlsVerify = dockerEnv["DOCKER_TLS_VERIFY"] == "1"
+    }
+    dependsOn("minikubeStart")
+}
+
+allprojects.flatMap { it.tasks }.filterIsInstance<BootBuildImage>().forEach {
     if (!project.hasProperty("localDocker")) {
-        val dockerEnv = minikube.getDockerEnv("minikube")
-        parent!!.tasks.withType<BootBuildImage> {
-            docker {
-                host = dockerEnv["DOCKER_HOST"]
-                certPath = dockerEnv["DOCKER_CERT_PATH"]
-                isTlsVerify = dockerEnv["DOCKER_TLS_VERIFY"] == "1"
-            }
-        }
-        mustRunAfter("minikubeStart")
+        it.selectMinikubeDocker()
     }
 }
 
@@ -83,6 +85,3 @@ tasks.register("createAllConfigMap") {
 tasks.getByName("helmInstall") {
     dependsOn("createAllConfigMap", ":bootBuildImage")
 }
-
-
-
