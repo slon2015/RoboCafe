@@ -1,8 +1,6 @@
 package com.robocafe.all.application.handlers
 
-import com.robocafe.all.application.handlers.models.StartSessionModel
-import com.robocafe.all.application.handlers.models.StartSessionResponse
-import com.robocafe.all.application.handlers.models.TableInitInfo
+import com.robocafe.all.application.handlers.models.*
 import com.robocafe.all.application.security.SecurityService
 import com.robocafe.all.session.SessionService
 import org.springframework.beans.factory.annotation.Autowired
@@ -42,11 +40,15 @@ class TableController @Autowired constructor(
         return TableInitInfo(
                 data.tableId,
                 if (data.partyId != null)
-                    StartSessionResponse(
+                    SessionInfo(
                             data.partyId,
                             data.persons
-                                    !!.map { it to securityService.findTokenFor(it, SecurityService.PERSON_ROLE) }
-                                    .toMap()
+                                    !!.map {
+                                        PersonInfo(it,
+                                            securityService.findTokenFor(it, SecurityService.PERSON_ROLE),
+                                                sessionService.getUnpayedBalanceForPerson(it)
+                                        )
+                                    }.toList()
                     ) else null,
                 data.tableStatus
         )

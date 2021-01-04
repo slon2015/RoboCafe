@@ -16,8 +16,20 @@ data class StartSessionResponse(
         val personTokens: Map<String, String>
 )
 
+data class PersonInfo(
+        val id: String,
+        val jwtToken: String,
+        val balance: Double
+)
+
+data class SessionInfo(
+        val partyToken: String,
+        val persons: List<PersonInfo>
+)
+
+
 data class TableInitInfo(
         val tableId: String,
-        val session: StartSessionResponse?,
+        val session: SessionInfo?,
         val tableStatus: TableStatus
 )
