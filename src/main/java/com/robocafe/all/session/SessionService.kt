@@ -346,6 +346,7 @@ class SessionService @Autowired constructor(
     fun getActivePayments() = paymentService.getActivePayments()
 
     fun getOpenOrders() = orderService.getOpenOrders()
+    fun getOpenOrdersForPerson(personId: String) = orderService.getOpenOrdersForPerson(personId)
     fun getPositionsForOrderThatWaitsForPreparing(orderId: String) =
             orderService.getPositionsForOrderThatWaitsForPreparing(orderId)
     fun getPositionsOnPreparingStage() =

@@ -1,5 +1,6 @@
 package com.robocafe.all.application.handlers.models
 
+import com.robocafe.all.application.services.OrderInfo
 import com.robocafe.all.domain.TableStatus
 
 data class RegisterTable(val tableNum: Int, val tableMaxPersons: Int)
@@ -19,7 +20,8 @@ data class StartSessionResponse(
 data class PersonInfo(
         val id: String,
         val jwtToken: String,
-        val balance: Double
+        val balance: Double,
+        val orders: Set<OrderInfo>
 )
 
 data class SessionInfo(

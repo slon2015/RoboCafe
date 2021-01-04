@@ -45,8 +45,9 @@ class TableController @Autowired constructor(
                             data.persons
                                     !!.map {
                                         PersonInfo(it,
-                                            securityService.findTokenFor(it, SecurityService.PERSON_ROLE),
-                                                sessionService.getUnpayedBalanceForPerson(it)
+                                                securityService.findTokenFor(it, SecurityService.PERSON_ROLE),
+                                                sessionService.getUnpayedBalanceForPerson(it),
+                                                sessionService.getOpenOrdersForPerson(it)
                                         )
                                     }.toList()
                     ) else null,
