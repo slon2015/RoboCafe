@@ -100,6 +100,9 @@ class JwtFilter @Autowired constructor(
             catch (e: JwtException) {
                 logger.warn("JWT decoding failed", e)
             }
+            catch (e: UsernameNotFoundException) {
+                throw SecurityObjectNotFound()
+            }
         }
         chain.doFilter(request, response)
     }
