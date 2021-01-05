@@ -6,7 +6,9 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import org.springframework.web.reactive.function.client.WebClient
+import org.springframework.web.reactive.function.client.WebClientResponseException.NotFound
 import org.springframework.web.reactive.function.client.bodyToFlow
+import reactor.core.publisher.Mono
 import java.net.URI
 
 data class AficheInfo(
@@ -37,10 +39,13 @@ class WebAficheProvider(
 
     fun fetchAficheContent(id: String): AficheContent? {
         return webClient.get()
-                .uri("/afiches/content")
-                .attribute("id", id)
+                .uri {uriBuilder -> uriBuilder
+                        .path("/afiches/content")
+                        .queryParam("id", id)
+                        .build()}
                 .retrieve()
                 .bodyToMono(AficheContent::class.java)
+                .onErrorResume({e -> e is NotFound}, { Mono.empty() })
                 .block()
     }
 }

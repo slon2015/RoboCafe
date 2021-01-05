@@ -1,5 +1,6 @@
 package com.robocafe.all.session
 
+import com.robocafe.all.afiche.AficheService
 import com.robocafe.all.application.services.*
 import com.robocafe.all.domain.*
 import com.robocafe.all.menu.PositionService
@@ -16,6 +17,7 @@ class SessionService @Autowired constructor(
         private val partyService: PartyService,
         private val chatService: ChatService,
         private val positionService: PositionService,
+        private val aficheService: AficheService,
         private val orderService: OrderService,
         private val paymentService: PaymentService,
         private val sessionRepository: SessionRepository
@@ -353,4 +355,6 @@ class SessionService @Autowired constructor(
             orderService.getPositionsOnPreparingStage()
     fun getPositionsOnDeliveringStage() =
             orderService.getPositionsOnDeliveringStage()
+    fun getAfichesList() = aficheService.getAfichePreviews()
+    fun getAficheContent(aficheId: String) = aficheService.getAficheContent(aficheId)
 }

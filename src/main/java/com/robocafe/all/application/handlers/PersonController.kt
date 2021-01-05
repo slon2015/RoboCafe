@@ -26,4 +26,10 @@ class PersonController @Autowired constructor(
         val personId = authentication.name
         return sessionService.getUnpayedBalanceForPerson(personId)
     }
+
+    @GetMapping("/afiches/list")
+    fun getAfichesList() = sessionService.getAfichesList()
+
+    @GetMapping("/afiches/{aficheId}/content")
+    fun getAficheContent(@PathVariable aficheId: String) = sessionService.getAficheContent(aficheId)
 }
