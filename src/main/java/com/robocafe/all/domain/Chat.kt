@@ -42,7 +42,7 @@ class Chat(@field:Id val id: String,
     private val chatId
         get() = ChatId(id)
 
-    @OneToMany(mappedBy = "chat")
+    @OneToMany(mappedBy = "chat", cascade = [CascadeType.ALL])
     val messages: MutableSet<Message> = HashSet()
 
     fun joinMemberToChat(member: ChatMemberId) {

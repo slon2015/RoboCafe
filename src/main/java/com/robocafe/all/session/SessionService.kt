@@ -1,8 +1,10 @@
 package com.robocafe.all.session
 
 import com.robocafe.all.afiche.AficheService
+import com.robocafe.all.application.handlers.models.HallStateInitInfo
 import com.robocafe.all.application.services.*
 import com.robocafe.all.domain.*
+import com.robocafe.all.hallscheme.HallStateService
 import com.robocafe.all.menu.PositionService
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
@@ -20,7 +22,8 @@ class SessionService @Autowired constructor(
         private val aficheService: AficheService,
         private val orderService: OrderService,
         private val paymentService: PaymentService,
-        private val sessionRepository: SessionRepository
+        private val sessionRepository: SessionRepository,
+        private val hallStateService: HallStateService
 ) {
 
     internal companion object Dsl {
@@ -37,6 +40,12 @@ class SessionService @Autowired constructor(
         private fun PartyInfo.assertPartyNotFull() {
             if (members.size == maxMembers) {
                 throw PartyAlreadyFull()
+            }
+        }
+
+        private fun PartyInfo.assertPlaceNotOccupied(place: Int) {
+            if (members.any { it.place == place}) {
+                throw PlaceAlreadyOccupied()
             }
         }
 
@@ -88,6 +97,12 @@ class SessionService @Autowired constructor(
             val orders = orderService.getOpenOrdersForPerson(id)
             if (orders.isNotEmpty()) {
                 throw PersonHasOpenOrders(orders)
+            }
+        }
+
+        private fun Collection<ChatMemberId>.assertMembersMoreThan1() {
+            if (this.size <= 1) {
+                throw OnlyOneMember()
             }
         }
 
@@ -187,10 +202,11 @@ class SessionService @Autowired constructor(
 
     fun notEndedPartyExists(partyId: String) = partyService.notEndedPartyExists(partyId)
 
-    fun joinPerson(partyId: String, personId: String) {
+    fun joinPerson(partyId: String, personId: String, place: Int) {
         partyService.getParty(partyId) operate {
             assertPartyNotFull()
-            partyService.joinPerson(partyId, personId)
+            assertPlaceNotOccupied(place)
+            partyService.joinPerson(partyId, personId, place)
         }
     }
 
@@ -213,13 +229,14 @@ class SessionService @Autowired constructor(
     }
 
     fun startChat(chatId: String, memberIds: Set<ChatMemberId>): ChatInfo {
+        memberIds.assertMembersMoreThan1()
         memberIds.forEach { it.assertMemberIsValid(personService, partyService) }
         return chatService.startChat(chatId, memberIds)
     }
 
     fun findChat(chatId: String) = chatService.findChat(chatId)
 
-    fun addMemberToChat(uniqueMemberId: String, chatId: String, member: ChatMemberId) {
+    fun addMemberToChat(chatId: String, member: ChatMemberId) {
         chatService.findChat(chatId) operate {
             assertMemberNotInChat(member.partyId, member.personId)
             member.assertMemberIsValid(personService, partyService)
@@ -345,6 +362,21 @@ class SessionService @Autowired constructor(
         }
     }
 
+    fun getHallState(): HallStateInitInfo {
+        val staticState = hallStateService.getHallState()
+        val tableMappings = tableService.getAllTablesInfo().map { it.tableNumber to it.id }.toMap()
+        return HallStateInitInfo(
+                staticState,
+                staticState.tableRects.keys
+                        .map { it to tableMappings[it] }
+                        .map { it.first to it.second?.let { tableId ->
+                                partyService.getOptionalPartyForTable(tableId)?.members
+                                        ?.map { member -> member.place }?.toSet()
+                            }
+                        }.toMap()
+        )
+    }
+
     fun getActivePayments() = paymentService.getActivePayments()
 
     fun getOpenOrders() = orderService.getOpenOrders()
@@ -357,4 +389,7 @@ class SessionService @Autowired constructor(
             orderService.getPositionsOnDeliveringStage()
     fun getAfichesList() = aficheService.getAfichePreviews()
     fun getAficheContent(aficheId: String) = aficheService.getAficheContent(aficheId)
+    fun getChatsForPerson(personId: String) =
+            chatService.getChatsFor(ChatMemberId(getPartyForPerson(personId).id, personId))
+    fun getPlaceForPerson(personId: String) = personService.getPerson(personId).place
 }

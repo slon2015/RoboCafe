@@ -8,7 +8,6 @@ import com.robocafe.all.domain.ChatMemberId
 import com.robocafe.all.domain.Message
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
-import java.util.*
 
 
 data class MessageInfo(
@@ -21,10 +20,10 @@ data class MessageInfo(
 data class ChatInfo(
         val id: String,
         val members: Set<ChatMemberId>,
-        val messages: Set<MessageInfo>
+        val messages: List<MessageInfo>
 ) {
     constructor(data: Chat): this(data.id, data.members.map { it.chatMemberId }.toSet(),
-            data.messages.map { MessageInfo(it) }.toSet()
+            data.messages.map { MessageInfo(it) }
     )
 }
 
@@ -40,6 +39,10 @@ class ChatService @Autowired constructor(
         val chat = Chat.startChat(chatId, mappedMembers)
         chatRepository.save(chat)
         return ChatInfo(chat)
+    }
+
+    fun getChatsFor(chatMemberId: ChatMemberId): Set<ChatInfo> {
+        return chatRepository.findByMembersContains(ChatMember(chatMemberId)).map { ChatInfo(it) }.toSet()
     }
 
     private fun getChat(chatId: String): Chat {
@@ -70,9 +73,6 @@ class ChatService @Autowired constructor(
     @Throws(ChatNotFound::class, MemberNotInChat::class, ChatMemberNotFound::class)
     fun sendMessage(messageId: String, chatId: String, memberId: ChatMemberId, text: String) {
         val chat = getChat(chatId)
-        if (!chat.members.all { it.chatMemberId != memberId }) {
-            throw MemberNotInChat()
-        }
         chat.sendMessage(messageId, text, memberId)
         chatRepository.save(chat)
     }

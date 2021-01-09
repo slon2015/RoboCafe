@@ -11,7 +11,9 @@ class Person(@field:Id val id: String,
              @field:JoinColumn(name = "party_id")
              @field:ManyToOne
              val party: Party,
-             var balance: Double = 0.0)
+             val placeOnTable: Int,
+             var balance: Double = 0.0
+)
 
 @Entity
 class Party(@field:Id val id: String, val tableId: String, val maxMembers: Int) : AbstractAggregateRoot<Party?>() {
@@ -27,8 +29,8 @@ class Party(@field:Id val id: String, val tableId: String, val maxMembers: Int) 
 
     fun isEnded() = endTime == null
 
-    fun joinPersonToParty(memberId: String) {
-        members.add(Person(memberId, this))
+    fun joinPersonToParty(memberId: String, place: Int) {
+        members.add(Person(memberId, this, place))
         registerEvent(MemberJoinToParty(this.id, memberId))
     }
 
@@ -57,7 +59,7 @@ class Party(@field:Id val id: String, val tableId: String, val maxMembers: Int) 
             var i = 0
             while (i < memberCount && i < maxMembers) {
                 val personId = UUID.randomUUID().toString()
-                party.joinPersonToParty(personId)
+                party.joinPersonToParty(personId, i + 1)
                 i++
             }
             return party

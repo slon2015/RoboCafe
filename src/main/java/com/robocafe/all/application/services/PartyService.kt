@@ -9,9 +9,9 @@ import org.springframework.stereotype.Service
 import java.time.Instant
 
 data class PersonInfo(
-        val id: String, val balance: Double
+        val id: String, val balance: Double, val place: Int
 ) {
-    constructor(data: Person): this(data.id, data.balance)
+    constructor(data: Person): this(data.id, data.balance, data.placeOnTable)
 }
 
 data class PartyInfo(
@@ -45,6 +45,11 @@ class PartyService @Autowired constructor(
         return PartyInfo(repository.findByTableIdAndEndTimeIsNull(tableId) ?: throw PartyNotFound())
     }
 
+    fun getOptionalPartyForTable(tableId: String): PartyInfo? {
+        val party = repository.findByTableIdAndEndTimeIsNull(tableId)
+        return if (party == null) null else PartyInfo(party)
+    }
+
     fun getPartyForPerson(personId: String): PartyInfo {
         return PartyInfo(repository.findByEndTimeIsNullAndMembersIdEquals(personId)
                 ?: throw PartyNotFound())
@@ -70,9 +75,9 @@ class PartyService @Autowired constructor(
 
 
     @Throws(PartyNotFound::class, PartyAlreadyEnded::class, PartyAlreadyFull::class)
-    fun joinPerson(partyId: String, personId: String) {
+    fun joinPerson(partyId: String, personId: String, place: Int) {
         val party = findNotEndedParty(partyId)
-        party.joinPersonToParty(personId);
+        party.joinPersonToParty(personId, place);
         repository.save(party)
     }
 

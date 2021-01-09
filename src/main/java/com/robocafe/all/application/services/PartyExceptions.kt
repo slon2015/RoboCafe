@@ -6,6 +6,7 @@ class TablePersonsCountLowerThanPartyMembersCount: DomainException()
 class PartyNotFound: EntityNotFound()
 class PartyAlreadyEnded: DomainException()
 class PartyAlreadyFull: DomainException()
+class PlaceAlreadyOccupied: DomainException()
 
 class PersonNotFound: EntityNotFound()
 class PersonNotInParty: DomainException()

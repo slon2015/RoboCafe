@@ -5,6 +5,5 @@ spring:
     username: 'root'
     password: 'admin'
   flyway:
-    url: 'jdbc:mariadb://localhost:3306/app_database'
     user: root
     password: admin

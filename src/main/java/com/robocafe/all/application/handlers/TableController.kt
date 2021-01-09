@@ -24,7 +24,9 @@ class TableController @Autowired constructor(
         val party = sessionService.startSession(tableId, partyId, body.personCount)
         return StartSessionResponse(
                 securityService.registerParty(party.id),
-                party.members.map { it.id to securityService.registerPerson(it.id) }.toMap()
+                party.members
+                        .sortedBy { it.place }
+                        .map { it.id to securityService.registerPerson(it.id) }.toList()
         )
     }
 
@@ -43,15 +45,22 @@ class TableController @Autowired constructor(
                     SessionInfo(
                             data.partyId,
                             data.persons
-                                    !!.map {
-                                        PersonInfo(it,
-                                                securityService.findTokenFor(it, SecurityService.PERSON_ROLE),
-                                                sessionService.getUnpayedBalanceForPerson(it),
-                                                sessionService.getOpenOrdersForPerson(it)
+                                    !!.map { personId ->
+                                PersonInfo(personId,
+                                                sessionService.getPlaceForPerson(personId),
+                                                securityService.findTokenFor(personId, SecurityService.PERSON_ROLE),
+                                                sessionService.getUnpayedBalanceForPerson(personId),
+                                                sessionService.getOpenOrdersForPerson(personId),
+                                                sessionService.getChatsForPerson(personId)
+                                                        .map { chatInfo -> ChatInitInfo(
+                                                                ChatInfo(chatInfo,
+                                                                        chatInfo.members.first { it.personId == personId}),
+                                                                chatInfo.messages) }.toSet()
                                         )
                                     }.toList()
                     ) else null,
-                data.tableStatus
+                data.tableStatus,
+                sessionService.getHallState()
         )
     }
 }
