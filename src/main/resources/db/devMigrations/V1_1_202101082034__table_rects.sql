@@ -1,0 +1,5 @@
+INSERT INTO TABLE_RECT(number, ltX, ltY, rbX, rbY) VALUES(1, 340, 230, 446, 284);
+INSERT INTO TABLE_RECT(number, ltX, ltY, rbX, rbY) VALUES(2, 340, 364, 446, 419);
+INSERT INTO TABLE_RECT(number, ltX, ltY, rbX, rbY) VALUES(3, 340, 499, 446, 555);
+INSERT INTO TABLE_RECT(number, ltX, ltY, rbX, rbY) VALUES(4, 340, 633, 446, 690);
+INSERT INTO TABLE_RECT(number, ltX, ltY, rbX, rbY) VALUES(5, 340, 768, 446, 822);

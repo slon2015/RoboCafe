@@ -198,6 +198,7 @@ CREATE TABLE `person` (
   `id` varchar(255) NOT NULL,
   `balance` double NOT NULL,
   `party_id` varchar(255) DEFAULT NULL,
+  `place_on_table` integer,
   PRIMARY KEY (`id`),
   KEY `FK31w8k0vvrlkpwaiveeebfwmg8` (`party_id`),
   CONSTRAINT `FK31w8k0vvrlkpwaiveeebfwmg8` FOREIGN KEY (`party_id`) REFERENCES `party` (`id`)
@@ -219,6 +220,15 @@ CREATE TABLE `session_chat_ids` (
   `chat_ids` varchar(255) DEFAULT NULL,
   KEY `FKavch1p5unlbiaxi8cbusngvdx` (`session_id`),
   CONSTRAINT `FKavch1p5unlbiaxi8cbusngvdx` FOREIGN KEY (`session_id`) REFERENCES `cafe_sessions` (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+CREATE TABLE `Table_Rect` (
+    `number` integer PRIMARY KEY,
+    `ltX` double,
+    `ltY` double,
+    `rbX` double,
+    `rbY` double,
+    KEY `Table_Rect_number_index` (`number`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 
