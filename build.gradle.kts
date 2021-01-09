@@ -55,6 +55,7 @@ tasks.withType<KotlinCompile> {
 
 tasks.withType<BootJar> {
     exclude("application-dev*.yml")
+    exclude("db/devMigrations")
 }
 
 val imageVersion = System.getenv("IMAGE_VERSION") ?: "dev"
