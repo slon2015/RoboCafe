@@ -2,6 +2,7 @@ package com.robocafe.all.application.handlers
 
 import com.robocafe.all.application.handlers.models.*
 import com.robocafe.all.application.security.SecurityService
+import com.robocafe.all.application.utils.ChatUtils
 import com.robocafe.all.session.SessionService
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.security.core.Authentication
@@ -14,7 +15,8 @@ import java.util.*
 @Transactional
 class TableController @Autowired constructor(
         private val sessionService: SessionService,
-        private val securityService: SecurityService
+        private val securityService: SecurityService,
+        private val chatUtils: ChatUtils
 ) {
 
     @PostMapping("/session")
@@ -47,15 +49,19 @@ class TableController @Autowired constructor(
                             data.persons
                                     !!.map { personId ->
                                 PersonInfo(personId,
-                                                sessionService.getPlaceForPerson(personId),
-                                                securityService.findTokenFor(personId, SecurityService.PERSON_ROLE),
-                                                sessionService.getUnpayedBalanceForPerson(personId),
-                                                sessionService.getOpenOrdersForPerson(personId),
-                                                sessionService.getChatsForPerson(personId)
-                                                        .map { chatInfo -> ChatInitInfo(
-                                                                ChatInfo(chatInfo,
-                                                                        chatInfo.members.first { it.personId == personId}),
-                                                                chatInfo.messages) }.toSet()
+                                    sessionService.getPlaceForPerson(personId),
+                                    securityService.findTokenFor(personId, SecurityService.PERSON_ROLE),
+                                    sessionService.getUnpayedBalanceForPerson(personId),
+                                    sessionService.getOpenOrdersForPerson(personId),
+                                    sessionService.getChatsForPerson(personId)
+                                            .map { chatInfo -> ChatInitInfo(
+                                                    OutboundChatInfo(chatInfo.id,
+                                                            chatUtils.mapToOutboundMember(
+                                                                    chatInfo.members.first { it.personId == personId}),
+                                                            chatInfo.members.map(chatUtils::mapToOutboundMember).toSet()
+                                                    ),
+                                                    chatInfo.messages.map(chatUtils::mapToOutboundMessageInfo).toList())
+                                            }.toSet()
                                         )
                                     }.toList()
                     ) else null,

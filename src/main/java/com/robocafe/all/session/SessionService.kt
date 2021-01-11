@@ -392,4 +392,8 @@ class SessionService @Autowired constructor(
     fun getChatsForPerson(personId: String) =
             chatService.getChatsFor(ChatMemberId(getPartyForPerson(personId).id, personId))
     fun getPlaceForPerson(personId: String) = personService.getPerson(personId).place
+    fun getTableByNumber(tableNumber: Int) = tableService.getTableByNumber(tableNumber)
+    fun getActivePartyForTable(tableId: String) = partyService.getActivePartyForTable(tableId)
+    fun getPersonFromPartyByPlace(partyId: String, place: Int) = personService.getPersonFromPartyByPlace(partyId, place)
+    fun getPerson(personId: String) = personService.getPerson(personId)
 }

@@ -1,12 +1,11 @@
 package com.robocafe.all.application.handlers.models
 
-import com.robocafe.all.application.services.ChatInfo
-import com.robocafe.all.domain.ChatMemberId
-
-data class StartChatModel(val members: Set<String>)
-class ChatInfo(chat: ChatInfo, val myId: ChatMemberId) {
-    val id = chat.id
-    val members = chat.members.map { it.personId }.toSet()
-}
-data class AddMemberModel(val id: String)
+data class OutboundMember(
+        val tableNum: Int,
+        val placeNum: Int
+)
+data class StartChatModel(val members: Set<OutboundMember>)
+class OutboundChatInfo(val chatId: String, val myId: OutboundMember, val members: Set<OutboundMember>)
+data class AddMemberModel(val member: OutboundMember)
 data class SendMessageModel(val text: String)
+data class OutboundMessageInfo(val id: String, val text: String, val author: OutboundMember)

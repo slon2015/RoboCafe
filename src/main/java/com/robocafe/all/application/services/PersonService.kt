@@ -11,6 +11,9 @@ class PersonService @Autowired constructor(private val repository: PersonReposit
         return PersonInfo(repository.findById(personId).orElseThrow { PersonNotFound() })
     }
 
+    fun getPersonFromPartyByPlace(partyId: String, place: Int) =
+            PersonInfo(repository.findByPartyIdAndPlaceOnTable(partyId, place) ?: throw PersonNotFound())
+
     fun personWithActivePartyExists(personId: String) =
             repository.existsByIdAndPartyEndTimeIsNull(personId)
 }

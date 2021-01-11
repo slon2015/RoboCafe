@@ -34,8 +34,8 @@ data class SessionInfo(
 )
 
 data class ChatInitInfo(
-        val chatInfo: ChatInfo,
-        val messages: List<MessageInfo>
+        val chatInfo: OutboundChatInfo,
+        val messages: List<OutboundMessageInfo>
 )
 
 data class HallStateInitInfo(
