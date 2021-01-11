@@ -22,7 +22,7 @@ class ChatUtils @Autowired constructor(
     fun mapToOutboundMember(member: ChatMemberId): OutboundMember {
         val party = sessionService.getParty(member.partyId)
         val table = sessionService.getTableInfo(party.tableId)
-        val person = sessionService.getPerson(party.id)
+        val person = sessionService.getPerson(member.personId)
         return OutboundMember(table.tableNumber, person.place)
     }
     fun mapToOutboundMessageInfo(data: MessageInfo): OutboundMessageInfo {
