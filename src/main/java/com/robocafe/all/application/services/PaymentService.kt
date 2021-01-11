@@ -123,4 +123,6 @@ class PaymentService @Autowired constructor(
                     .map { it.amount }.sum()
     fun getPayment(paymentId: String) = PaymentInfo(findPayment(paymentId))
     fun getActivePayments() = paymentRepository.findAllActivePayments().map { PaymentInfo(it) }.toSet()
+    fun getActivePaymentsForParty(partyId: String) =
+            paymentRepository.findAllActivePaymentsByPartyId(partyId).map { PaymentInfo(it) }.toSet()
 }

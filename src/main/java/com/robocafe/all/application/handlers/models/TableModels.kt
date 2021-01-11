@@ -2,6 +2,7 @@ package com.robocafe.all.application.handlers.models
 
 import com.robocafe.all.application.services.MessageInfo
 import com.robocafe.all.application.services.OrderInfo
+import com.robocafe.all.application.services.PaymentInfo
 import com.robocafe.all.domain.TableStatus
 import com.robocafe.all.hallscheme.HallState
 
@@ -26,14 +27,16 @@ data class PersonInfo(
         val jwtToken: String,
         val balance: Double,
         val orders: Set<OrderInfo>,
-        val chats: Set<ChatInitInfo>
+        val chats: Set<ChatInitInfo>,
+        val paymentInfo: PaymentInfo?
 )
 
 data class SessionInfo(
         val partyId: String,
         val partyJwtToken: String,
         val partyBalance: Double,
-        val persons: List<PersonInfo>
+        val persons: List<PersonInfo>,
+        val paymentInfo: PaymentInfo?
 )
 
 data class ChatInitInfo(

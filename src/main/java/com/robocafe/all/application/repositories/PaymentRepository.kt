@@ -21,4 +21,6 @@ interface PaymentRepository: JpaRepository<Payment, String> {
     fun existsByPartyIdAndStatusNotIsConfirmedAndStatusNotIsFailed(partyId: String): Boolean
     @Query("SELECT p FROM Payment p WHERE status != 'CONFIRMED' AND status != 'FAILED'")
     fun findAllActivePayments(): Set<Payment>
+    @Query("SELECT p FROM Payment p WHERE status != 'CONFIRMED' AND status != 'FAILED' AND partyId = ?1")
+    fun findAllActivePaymentsByPartyId(partyId: String): Set<Payment>
 }

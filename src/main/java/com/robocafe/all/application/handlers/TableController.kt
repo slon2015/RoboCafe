@@ -42,6 +42,7 @@ class TableController @Autowired constructor(
     @GetMapping("/init")
     fun initTable(authentication: Authentication): TableInitInfo {
         val data = sessionService.getInitDataForTable(authentication.name)
+        val payments = if (data.partyId != null) sessionService.getActivePaymentsForParty(data.partyId) else null
         return TableInitInfo(
                 data.tableId,
                 if (data.partyId != null)
@@ -64,9 +65,11 @@ class TableController @Autowired constructor(
                                                             chatInfo.members.map(chatUtils::mapToOutboundMember).toSet()
                                                     ),
                                                     chatInfo.messages.map(chatUtils::mapToOutboundMessageInfo).toList())
-                                            }.toSet()
+                                            }.toSet(),
+                                    payments?.find { it.personId == personId }
                                         )
-                                    }.toList()
+                                    }.toList(),
+                            payments?.find { it.personId == null }
                     ) else null,
                 data.tableStatus,
                 sessionService.getHallState(),

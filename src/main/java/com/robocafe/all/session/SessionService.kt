@@ -398,4 +398,5 @@ class SessionService @Autowired constructor(
     fun getActivePartyForTable(tableId: String) = partyService.getActivePartyForTable(tableId)
     fun getPersonFromPartyByPlace(partyId: String, place: Int) = personService.getPersonFromPartyByPlace(partyId, place)
     fun getPerson(personId: String) = personService.getPerson(personId)
+    fun getActivePaymentsForParty(partyId: String) = paymentService.getActivePaymentsForParty(partyId)
 }
