@@ -15,7 +15,8 @@ data class StartSessionModel(
         val personCount: Int
 )
 data class StartSessionResponse(
-        val partyToken: String,
+        val partyId: String,
+        val partyJwtToken: String,
         val personTokens: List<Pair<String, String>>
 )
 
@@ -29,7 +30,9 @@ data class PersonInfo(
 )
 
 data class SessionInfo(
-        val partyToken: String,
+        val partyId: String,
+        val partyJwtToken: String,
+        val partyBalance: Double,
         val persons: List<PersonInfo>
 )
 

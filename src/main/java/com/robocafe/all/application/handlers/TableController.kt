@@ -25,6 +25,7 @@ class TableController @Autowired constructor(
         val tableId = authentication.name
         val party = sessionService.startSession(tableId, partyId, body.personCount)
         return StartSessionResponse(
+                party.id,
                 securityService.registerParty(party.id),
                 party.members
                         .sortedBy { it.place }
@@ -46,6 +47,8 @@ class TableController @Autowired constructor(
                 if (data.partyId != null)
                     SessionInfo(
                             data.partyId,
+                            securityService.findTokenFor(data.partyId, SecurityService.PARTY_ROLE),
+                            sessionService.getUnpayedBalanceForParty(data.partyId),
                             data.persons
                                     !!.map { personId ->
                                 PersonInfo(personId,
