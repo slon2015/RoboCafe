@@ -38,4 +38,10 @@ class PartyController @Autowired constructor(
         )
     }
 
+    @GetMapping("/view/balance")
+    fun getPartyBalance(authentication: Authentication): Double {
+        val partyId = authentication.name
+        return sessionService.getUnpayedBalanceForParty(partyId)
+    }
+
 }
