@@ -66,7 +66,8 @@ class TableController @Autowired constructor(
                                     }.toList()
                     ) else null,
                 data.tableStatus,
-                sessionService.getHallState()
+                sessionService.getHallState(),
+                data.tableNum
         )
     }
 }

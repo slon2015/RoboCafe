@@ -178,6 +178,7 @@ class SessionService @Autowired constructor(
     data class TableInitInfo(
             val tableId: String,
             val tableStatus: TableStatus,
+            val tableNum: Int,
             val partyId: String?,
             val persons: List<String>?
 
@@ -189,6 +190,7 @@ class SessionService @Autowired constructor(
         return TableInitInfo(
                 table.id,
                 table.status,
+                table.tableNumber,
                 party?.id,
                 party?.members?.map { it.id }
         )

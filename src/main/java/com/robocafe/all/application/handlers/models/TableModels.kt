@@ -47,5 +47,6 @@ data class TableInitInfo(
         val tableId: String,
         val session: SessionInfo?,
         val tableStatus: TableStatus,
-        val hallState: HallStateInitInfo
+        val hallState: HallStateInitInfo,
+        val tableNum: Int
 )
