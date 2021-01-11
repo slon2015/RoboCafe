@@ -325,8 +325,8 @@ class SessionService @Autowired constructor(
     fun createPayment(target: PaymentTarget, amount: Double): PaymentInfo {
         lateinit var payment: PaymentInfo
         val paymentId = UUID.randomUUID().toString()
+        assertAmountGreaterThanZero(amount)
         partyService.getParty(target.partyId) operate {
-            assertAmountGreaterThanZero(amount)
             if (target.personId != null) {
                 assertPersonInParty(target.personId)
                 assertUnpayedBalanceGreaterOrEquals(target, amount, this@SessionService)
