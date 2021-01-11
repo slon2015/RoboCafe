@@ -19,10 +19,11 @@ data class MessageInfo(
 
 data class ChatInfo(
         val id: String,
+        val name: String,
         val members: Set<ChatMemberId>,
         val messages: List<MessageInfo>
 ) {
-    constructor(data: Chat): this(data.id, data.members.map { it.chatMemberId }.toSet(),
+    constructor(data: Chat): this(data.id, data.name, data.members.map { it.chatMemberId }.toSet(),
             data.messages.map { MessageInfo(it) }
     )
 }
@@ -34,9 +35,9 @@ class ChatService @Autowired constructor(
 ) {
 
     @Throws(PersonNotFound::class, PersonsPartyEnded::class, PartyNotFound::class, PartyAlreadyEnded::class)
-    fun startChat(chatId: String, members: Set<ChatMemberId>): ChatInfo {
+    fun startChat(chatId: String, chatName: String, members: Set<ChatMemberId>): ChatInfo {
         val mappedMembers = members.map { ChatMemberId(it.partyId, it.personId) }.toMutableSet()
-        val chat = Chat.startChat(chatId, mappedMembers)
+        val chat = Chat.startChat(chatId, chatName, mappedMembers)
         chatRepository.save(chat)
         return ChatInfo(chat)
     }

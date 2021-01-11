@@ -103,6 +103,7 @@ CREATE TABLE `cafe_table` (
 
 CREATE TABLE `chat` (
   `id` varchar(255) NOT NULL,
+  `name` varchar(255),
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 

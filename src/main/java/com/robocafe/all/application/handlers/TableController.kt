@@ -55,7 +55,7 @@ class TableController @Autowired constructor(
                                     sessionService.getOpenOrdersForPerson(personId),
                                     sessionService.getChatsForPerson(personId)
                                             .map { chatInfo -> ChatInitInfo(
-                                                    OutboundChatInfo(chatInfo.id,
+                                                    OutboundChatInfo(chatInfo.id, chatInfo.name,
                                                             chatUtils.mapToOutboundMember(
                                                                     chatInfo.members.first { it.personId == personId}),
                                                             chatInfo.members.map(chatUtils::mapToOutboundMember).toSet()

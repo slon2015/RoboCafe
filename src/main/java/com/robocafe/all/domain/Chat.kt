@@ -35,6 +35,7 @@ class Message(@field:Id private val id: String, val text: String,
 
 @Entity
 class Chat(@field:Id val id: String,
+           val name: String,
             @field:ElementCollection
             @field:CollectionTable(name ="chat_chat_members")
            val members: MutableSet<ChatMember> = HashSet()
@@ -62,10 +63,10 @@ class Chat(@field:Id val id: String,
     }
 
     companion object {
-        fun startChat(id: String, ids: MutableSet<ChatMemberId> = HashSet()): Chat {
+        fun startChat(id: String, name: String, ids: MutableSet<ChatMemberId> = HashSet()): Chat {
             val members = ids.map { ChatMember(it) }.toMutableSet()
-            val chat = Chat(id, members)
-            chat.registerEvent(ChatStarted(chat.chatId, members))
+            val chat = Chat(id, name, members)
+            chat.registerEvent(ChatStarted(chat.chatId, name, members))
             return chat
         }
     }

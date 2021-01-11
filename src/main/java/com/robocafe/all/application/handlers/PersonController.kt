@@ -44,9 +44,9 @@ class PersonController @Autowired constructor(
         val chatId = UUID.randomUUID().toString()
         val personId = authentication.name
         val myChatId = chatUtils.mapToDomainMemberId(personId)
-        val chat = sessionService.startChat(chatId,
+        val chat = sessionService.startChat(chatId, body.chatName,
                 body.members.map { chatUtils.mapToDomainMemberId(it) }.plus(myChatId).toSet())
-        return OutboundChatInfo(chat.id,
+        return OutboundChatInfo(chat.id, chat.name,
                 chatUtils.mapToOutboundMember(myChatId),
                 chat.members.map(chatUtils::mapToOutboundMember).toSet())
     }

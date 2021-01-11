@@ -228,10 +228,10 @@ class SessionService @Autowired constructor(
         }
     }
 
-    fun startChat(chatId: String, memberIds: Set<ChatMemberId>): ChatInfo {
+    fun startChat(chatId: String, chatName: String, memberIds: Set<ChatMemberId>): ChatInfo {
         memberIds.assertMembersMoreThan1()
         memberIds.forEach { it.assertMemberIsValid(personService, partyService) }
-        return chatService.startChat(chatId, memberIds)
+        return chatService.startChat(chatId, chatName, memberIds)
     }
 
     fun findChat(chatId: String) = chatService.findChat(chatId)
