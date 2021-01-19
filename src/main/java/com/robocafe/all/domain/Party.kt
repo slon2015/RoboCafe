@@ -1,5 +1,7 @@
 package com.robocafe.all.domain
 
+import com.robocafe.all.domain.models.PartyScopedPersonInfo
+import com.robocafe.all.domain.models.PartyScopedTableInfo
 import org.springframework.data.domain.AbstractAggregateRoot
 import java.time.Instant
 import java.util.*
@@ -29,19 +31,29 @@ class Party(@field:Id val id: String, val tableId: String, val maxMembers: Int) 
 
     fun isEnded() = endTime == null
 
-    fun joinPersonToParty(memberId: String, place: Int) {
-        members.add(Person(memberId, this, place))
-        registerEvent(MemberJoinToParty(this.id, memberId))
+    fun joinPersonToParty(memberId: String, place: Int, tableId: String, tableNum: Int) {
+        val newPerson = Person(memberId, this, place)
+        members.add(newPerson)
+        registerEvent(MemberJoinToParty(
+                PartyScopedTableInfo(tableId, tableNum),
+                this.id,
+                PartyScopedPersonInfo(newPerson)
+        ))
     }
 
-    fun removePersonFromParty(memberId: String) {
-        members.removeIf { p: Person -> p.id == memberId }
-        registerEvent(MemberLeaveParty(this.id, memberId))
+    fun removePersonFromParty(tableId: String, tableNum: Int, memberId: String) {
+        val person = members.find { it.id == memberId }!!
+        members.remove(person)
+        registerEvent(MemberLeaveParty(
+                PartyScopedTableInfo(tableId, tableNum),
+                this.id,
+                PartyScopedPersonInfo(person)
+        ))
     }
 
-    fun endParty() {
+    fun endParty(tableId: String, tableNum: Int) {
         endTime = Instant.now()
-        registerEvent(PartyEnded(id))
+        registerEvent(PartyEnded(PartyScopedTableInfo(tableId, tableNum), id))
     }
 
     fun changePersonBalance(memberId: String, amount: Double) {
@@ -53,13 +65,17 @@ class Party(@field:Id val id: String, val tableId: String, val maxMembers: Int) 
     }
 
     companion object {
-        fun startParty(id: String, tableId: String, maxMembers: Int, memberCount: Int): Party {
+        fun startParty(id: String, tableId: String, tableNum: Int, maxMembers: Int, memberCount: Int): Party {
             val party = Party(id, tableId, maxMembers, memberCount)
-            party.registerEvent(PartyStarted(id, tableId))
             var i = 0
+            party.registerEvent(PartyStarted(
+                    id,
+                    PartyScopedTableInfo(tableId, tableNum)
+                )
+            )
             while (i < memberCount && i < maxMembers) {
                 val personId = UUID.randomUUID().toString()
-                party.joinPersonToParty(personId, i + 1)
+                party.joinPersonToParty(personId, i + 1, tableId, tableNum)
                 i++
             }
             return party

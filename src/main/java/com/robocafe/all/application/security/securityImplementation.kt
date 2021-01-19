@@ -1,8 +1,13 @@
 package com.robocafe.all.application.security
 
 import io.jsonwebtoken.JwtException
+import org.apache.logging.log4j.Logger
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.messaging.Message
+import org.springframework.messaging.MessageChannel
+import org.springframework.messaging.support.ChannelInterceptor
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken
+import org.springframework.security.core.Authentication
 import org.springframework.security.core.GrantedAuthority
 import org.springframework.security.core.authority.SimpleGrantedAuthority
 import org.springframework.security.core.context.SecurityContextHolder
@@ -74,6 +79,14 @@ class ObjectUserDetailsService @Autowired constructor(
 
 }
 
+fun authenticateToken(token: String,
+                      jwtProvider: JwtProvider,
+                      objectUserDetailsService: ObjectUserDetailsService): Authentication {
+    val securityObjectId = jwtProvider.getInfoFromToken(token).securityObjectId
+    val userDetails = objectUserDetailsService.loadUserByUsername(securityObjectId)
+    return UsernamePasswordAuthenticationToken(userDetails, null, userDetails.authorities)
+}
+
 @Component
 class JwtFilter @Autowired constructor(
         private val jwtProvider: JwtProvider,
@@ -92,10 +105,8 @@ class JwtFilter @Autowired constructor(
         val token = getTokenFromRequest(request as HttpServletRequest)
         if (token != null) {
             try {
-                val securityObjectId = jwtProvider.getInfoFromToken(token).securityObjectId
-                val userDetails = objectUserDetailsService.loadUserByUsername(securityObjectId)
-                val auth = UsernamePasswordAuthenticationToken(userDetails, null, userDetails.authorities)
-                SecurityContextHolder.getContext().authentication = auth
+                SecurityContextHolder.getContext().authentication =
+                        authenticateToken(token, jwtProvider, objectUserDetailsService)
             }
             catch (e: JwtException) {
                 logger.warn("JWT decoding failed", e)
@@ -108,4 +119,6 @@ class JwtFilter @Autowired constructor(
     }
 
 }
+
+
 

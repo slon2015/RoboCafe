@@ -5,22 +5,18 @@ import com.robocafe.all.application.repositories.PartyRepository
 import kotlin.Throws
 import com.robocafe.all.domain.Party
 import com.robocafe.all.domain.Person
+import com.robocafe.all.domain.models.PartyScopedPersonInfo
 import org.springframework.stereotype.Service
 import java.time.Instant
 
-data class PersonInfo(
-        val id: String, val balance: Double, val place: Int
-) {
-    constructor(data: Person): this(data.id, data.balance, data.placeOnTable)
-}
 
 data class PartyInfo(
         val id: String, val tableId: String, val maxMembers: Int,
-        val members: Set<PersonInfo>,
+        val members: Set<PartyScopedPersonInfo>,
         val endTime: Instant?
 ) {
     constructor(data: Party): this(data.id, data.tableId, data.maxMembers,
-            data.members.map { PersonInfo(it) }.toSet(), data.endTime)
+            data.members.map { PartyScopedPersonInfo(it) }.toSet(), data.endTime)
 }
 
 @Service
@@ -36,8 +32,14 @@ class PartyService @Autowired constructor(
     }
 
     @Throws(TableNotFound::class, TableNotFree::class, TablePersonsCountLowerThanPartyMembersCount::class)
-    fun startParty(tableId: String, partyId: String, maxMembersCount: Int, membersCount: Int): PartyInfo {
-        val newParty = Party.startParty(partyId, tableId, maxMembersCount, membersCount)
+    fun startParty(tableInfo: TableInfo,partyId: String, membersCount: Int): PartyInfo {
+        val newParty = Party.startParty(
+                partyId,
+                tableInfo.id,
+                tableInfo.tableNumber,
+                tableInfo.maxPersons,
+                membersCount
+        )
         return PartyInfo(repository.save(newParty))
     }
 
@@ -75,23 +77,23 @@ class PartyService @Autowired constructor(
 
 
     @Throws(PartyNotFound::class, PartyAlreadyEnded::class, PartyAlreadyFull::class)
-    fun joinPerson(partyId: String, personId: String, place: Int) {
+    fun joinPerson(partyId: String, personId: String, place: Int, tableInfo: TableInfo) {
         val party = findNotEndedParty(partyId)
-        party.joinPersonToParty(personId, place);
+        party.joinPersonToParty(personId, place, tableInfo.id, tableInfo.tableNumber);
         repository.save(party)
     }
 
     @Throws(PartyNotFound::class, PartyAlreadyEnded::class, PersonNotFound::class, PersonNotInParty::class)
-    fun removePersonFromParty(partyId: String, personId: String) {
+    fun removePersonFromParty(tableNum: Int, partyId: String, personId: String) {
         val party = findNotEndedParty(partyId)
-        party.removePersonFromParty(personId)
+        party.removePersonFromParty(party.tableId, tableNum, personId)
         repository.save(party)
     }
 
     @Throws(PartyNotFound::class, PartyAlreadyEnded::class)
-    fun endParty(partyId: String) {
+    fun endParty(tableNum: Int, partyId: String) {
         val party = findNotEndedParty(partyId)
-        party.endParty()
+        party.endParty(party.tableId, tableNum)
         repository.save(party)
     }
 

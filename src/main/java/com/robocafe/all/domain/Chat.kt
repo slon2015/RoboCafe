@@ -5,8 +5,6 @@ import java.lang.Exception
 import java.util.function.Predicate
 import javax.persistence.*
 
-class ChatMemberAlreadyAssignedToPerson: Exception()
-class ChatMemberAlreadyAssignedToParty: Exception()
 
 data class ChatMemberId(val partyId: String, val personId: String)
 inline class MessageId(val id: String)
@@ -48,18 +46,18 @@ class Chat(@field:Id val id: String,
 
     fun joinMemberToChat(member: ChatMemberId) {
         members.add(ChatMember(member))
-        registerEvent(MemberJoinedToChat(chatId, member))
+        registerEvent(MemberJoinedToChat(id, member))
     }
 
     fun sendMessage(messageId: String, messageText: String, author: ChatMemberId) {
         val message = Message(messageId, messageText, ChatMember(author), this)
         messages.add(message)
-        registerEvent(MessageSentToChat(chatId, author, message.messageId))
+        registerEvent(MessageSentToChat(id, author, message.messageId))
     }
 
     fun removeMemberFromChat(member: ChatMemberId) {
         members.removeIf { it.partyId == member.partyId && it.personId == member.personId }
-        registerEvent(MemberRemovedFromChat(chatId, member))
+        registerEvent(MemberRemovedFromChat(id, member))
     }
 
     companion object {

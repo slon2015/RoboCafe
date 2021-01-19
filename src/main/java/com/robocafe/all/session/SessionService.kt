@@ -4,6 +4,7 @@ import com.robocafe.all.afiche.AficheService
 import com.robocafe.all.application.handlers.models.HallStateInitInfo
 import com.robocafe.all.application.services.*
 import com.robocafe.all.domain.*
+import com.robocafe.all.domain.models.PartyScopedPersonInfo
 import com.robocafe.all.hallscheme.HallStateService
 import com.robocafe.all.menu.PositionService
 import org.springframework.beans.factory.annotation.Autowired
@@ -87,13 +88,13 @@ class SessionService @Autowired constructor(
             }
         }
 
-        private fun PersonInfo.assertBalancePayed(sessionService: SessionService) {
+        private fun PartyScopedPersonInfo.assertBalancePayed(sessionService: SessionService) {
             if (sessionService.getUnpayedBalanceForPerson(id) > 0) {
                 throw BalanceForPersonNotPayed()
             }
         }
 
-        private infix fun PersonInfo.assertPersonHaveNoOpenOrdersIn(orderService: OrderService) {
+        private infix fun PartyScopedPersonInfo.assertPersonHaveNoOpenOrdersIn(orderService: OrderService) {
             val orders = orderService.getOpenOrdersForPerson(id)
             if (orders.isNotEmpty()) {
                 throw PersonHasOpenOrders(orders)
@@ -208,7 +209,7 @@ class SessionService @Autowired constructor(
         partyService.getParty(partyId) operate {
             assertPartyNotFull()
             assertPlaceNotOccupied(place)
-            partyService.joinPerson(partyId, personId, place)
+            partyService.joinPerson(partyId, personId, place, tableService.getTableInfo(tableId))
         }
     }
 
@@ -218,7 +219,8 @@ class SessionService @Autowired constructor(
             personService.getPerson(personId) operate {
                 assertPersonHaveNoOpenOrdersIn(orderService)
                 assertBalancePayed(this@SessionService)
-                partyService.removePersonFromParty(partyId, personId)
+                val tableNum = tableService.getTableInfo(tableId).tableNumber
+                partyService.removePersonFromParty(tableNum, partyId, personId)
             }
         }
     }
@@ -299,7 +301,7 @@ class SessionService @Autowired constructor(
         tableService.getTableInfo(tableId) operate {
             assertStatusEquals(TableStatus.FREE)
             tableService.occupyTable(tableId)
-            party = partyService.startParty(tableId, partyId, maxPersons, membersCount)
+            party = partyService.startParty(this, partyId, membersCount)
         }
         return party
     }
@@ -317,7 +319,8 @@ class SessionService @Autowired constructor(
         party operate {
             assertMembersHaveNoOpenOrdersIn(orderService)
             assertBalancePayed(this@SessionService)
-            partyService.endParty(id)
+            val tableNum = tableService.getTableInfo(tableId).tableNumber
+            partyService.endParty(tableNum, id)
             tableService.releaseTable(tableId)
         }
     }

@@ -1,7 +1,82 @@
 package com.robocafe.all.domain
 
-data class PartyStarted(val partyId: String, val tableId: String)
-data class MemberJoinToParty(val partyId: String, val memberId: String)
-data class MemberLeaveParty(val partyId: String, val memberId: String)
-data class PartyEnded(val partyId: String)
-data class MemberBalanceChanged(val partyId: String, val memberId: String, val amount: Double)
+import com.robocafe.all.domain.models.PartyScopedPersonInfo
+import com.robocafe.all.domain.models.PartyScopedTableInfo
+import com.robocafe.all.events.dispatching.SendToHall
+import com.robocafe.all.events.dispatching.SendToParty
+
+
+@SendToHall("/parties/start")
+data class PartyStarted(val partyId: String, val table: PartyScopedTableInfo): DomainEvent {
+    override fun convertForHall(): Any {
+        return mapOf("tableNum" to table.tableNum)
+    }
+}
+@SendToHall("/parties/member/add")
+@SendToParty("/member/add")
+data class MemberJoinToParty(
+        val table: PartyScopedTableInfo,
+        override val partyId: String,
+        val member: PartyScopedPersonInfo
+): PartyDomainEvent {
+    override fun convertForHall(): Any {
+        return mapOf(
+                "tableNum" to table.tableNum,
+                "place" to member.place
+        )
+    }
+
+    override fun convertForParty(): Any {
+        return mapOf(
+                "place" to member.place,
+                "id" to member.id
+        )
+    }
+}
+@SendToHall("/parties/member/remove")
+@SendToParty("/member/remove")
+data class MemberLeaveParty(
+        val table: PartyScopedTableInfo,
+        override val partyId: String,
+        val member: PartyScopedPersonInfo
+): PartyDomainEvent {
+    override fun convertForHall(): Any {
+        return mapOf(
+                "tableNum" to table.tableNum,
+                "place" to member.place
+        )
+    }
+
+    override fun convertForParty(): Any {
+        return mapOf(
+                "place" to member.place
+        )
+    }
+}
+@SendToHall("/parties/end")
+@SendToParty("/end")
+data class PartyEnded(val table: PartyScopedTableInfo,
+                      override val partyId: String): PartyDomainEvent {
+    override fun convertForHall(): Any {
+        return mapOf(
+                "tableNum" to table.tableId
+        )
+    }
+
+    override fun convertForParty(): Any {
+        return mapOf<String, Any>()
+    }
+}
+@SendToParty("/member/balance/change")
+data class MemberBalanceChanged(
+        override val partyId: String,
+        val memberId: String,
+        val amount: Double // Balance increment value
+): PartyDomainEvent {
+    override fun convertForParty(): Any {
+        return mapOf(
+                "memberId" to memberId,
+                "amount" to amount
+        )
+    }
+}

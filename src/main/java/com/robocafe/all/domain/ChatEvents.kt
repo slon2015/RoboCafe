@@ -1,6 +1,26 @@
 package com.robocafe.all.domain
 
-data class ChatStarted(val chatId: ChatId, val name: String, val members: MutableSet<ChatMember>)
-data class MemberJoinedToChat(val chatId: ChatId, val memberId: ChatMemberId)
-data class MessageSentToChat(val chatId: ChatId, val authorId: ChatMemberId, val messageId: MessageId)
-data class MemberRemovedFromChat(val chatId: ChatId, val memberPartyId: ChatMemberId)
+import com.robocafe.all.events.dispatching.SendToChat
+
+data class ChatStarted(
+        val chatId: ChatId,
+        val name: String,
+        val members: MutableSet<ChatMember>
+): DomainEvent
+
+@SendToChat("/members/add")
+data class MemberJoinedToChat(
+        override val chatId: String,
+        val memberId: ChatMemberId
+): ChatDomainEvent
+@SendToChat("/message")
+data class MessageSentToChat(
+        override val chatId: String,
+        val authorId: ChatMemberId,
+        val messageId: MessageId,
+        val text: String
+): ChatDomainEvent
+data class MemberRemovedFromChat(
+        override val chatId: String,
+        val memberPartyId: ChatMemberId
+): ChatDomainEvent
