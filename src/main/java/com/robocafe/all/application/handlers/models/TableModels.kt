@@ -1,6 +1,5 @@
 package com.robocafe.all.application.handlers.models
 
-import com.robocafe.all.application.services.MessageInfo
 import com.robocafe.all.application.services.OrderInfo
 import com.robocafe.all.application.services.PaymentInfo
 import com.robocafe.all.domain.TableStatus

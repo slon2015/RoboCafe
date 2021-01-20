@@ -4,6 +4,9 @@ import com.robocafe.all.afiche.AficheService
 import com.robocafe.all.application.handlers.models.HallStateInitInfo
 import com.robocafe.all.application.services.*
 import com.robocafe.all.domain.*
+import com.robocafe.all.domain.models.ChatInfo
+import com.robocafe.all.domain.models.ChatMemberInfo
+import com.robocafe.all.domain.models.DetalizedChatMemberInfo
 import com.robocafe.all.domain.models.PartyScopedPersonInfo
 import com.robocafe.all.hallscheme.HallStateService
 import com.robocafe.all.menu.PositionService
@@ -101,13 +104,13 @@ class SessionService @Autowired constructor(
             }
         }
 
-        private fun Collection<ChatMemberId>.assertMembersMoreThan1() {
+        private fun Collection<DetalizedChatMemberInfo>.assertMembersMoreThan1() {
             if (this.size <= 1) {
                 throw OnlyOneMember()
             }
         }
 
-        private fun ChatMemberId.assertMemberIsValid(personService: PersonService, partyService: PartyService) {
+        private fun DetalizedChatMemberInfo.assertMemberIsValid(personService: PersonService, partyService: PartyService) {
             if (!partyService.notEndedPartyExists(partyId)) {
                 throw MembersPartyEnded()
             }
@@ -232,7 +235,11 @@ class SessionService @Autowired constructor(
         }
     }
 
-    fun startChat(chatId: String, chatName: String, memberIds: Set<ChatMemberId>): ChatInfo {
+    fun startChat(
+            chatId: String,
+            chatName: String,
+            memberIds: Set<DetalizedChatMemberInfo>
+    ): ChatInfo {
         memberIds.assertMembersMoreThan1()
         memberIds.forEach { it.assertMemberIsValid(personService, partyService) }
         return chatService.startChat(chatId, chatName, memberIds)
@@ -240,7 +247,7 @@ class SessionService @Autowired constructor(
 
     fun findChat(chatId: String) = chatService.findChat(chatId)
 
-    fun addMemberToChat(chatId: String, member: ChatMemberId) {
+    fun addMemberToChat(chatId: String, member: DetalizedChatMemberInfo) {
         chatService.findChat(chatId) operate {
             assertMemberNotInChat(member.partyId, member.personId)
             member.assertMemberIsValid(personService, partyService)
@@ -248,14 +255,14 @@ class SessionService @Autowired constructor(
         }
     }
 
-    fun removeMemberFromChat(chatId: String, memberId: ChatMemberId) {
+    fun removeMemberFromChat(chatId: String, memberId: DetalizedChatMemberInfo) {
         chatService.findChat(chatId) operate {
             assertMemberInChat(memberId.partyId, memberId.personId)
             chatService.removeMemberFromChat(chatId, memberId)
         }
     }
 
-    fun sendMessage(messageId: String, chatId: String, memberId: ChatMemberId, text: String) {
+    fun sendMessage(messageId: String, chatId: String, memberId: DetalizedChatMemberInfo, text: String) {
         chatService.findChat(chatId) operate {
             assertMemberInChat(memberId.partyId, memberId.personId)
             chatService.sendMessage(messageId, chatId, memberId, text)
@@ -395,7 +402,7 @@ class SessionService @Autowired constructor(
     fun getAfichesList() = aficheService.getAfichePreviews()
     fun getAficheContent(aficheId: String) = aficheService.getAficheContent(aficheId)
     fun getChatsForPerson(personId: String) =
-            chatService.getChatsFor(ChatMemberId(getPartyForPerson(personId).id, personId))
+            chatService.getChatsFor(ChatMemberInfo(getPartyForPerson(personId).id, personId))
     fun getPlaceForPerson(personId: String) = personService.getPerson(personId).place
     fun getTableByNumber(tableNumber: Int) = tableService.getTableByNumber(tableNumber)
     fun getActivePartyForTable(tableId: String) = partyService.getActivePartyForTable(tableId)

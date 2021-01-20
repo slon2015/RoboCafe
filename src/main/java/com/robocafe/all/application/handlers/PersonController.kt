@@ -2,11 +2,11 @@ package com.robocafe.all.application.handlers
 
 import com.robocafe.all.application.UnauthorizedForThisChat
 import com.robocafe.all.application.handlers.models.*
-import com.robocafe.all.application.services.MessageInfo
 import com.robocafe.all.application.services.OrderAuthorData
 import com.robocafe.all.application.services.OrderInfo
 import com.robocafe.all.application.utils.ChatUtils
-import com.robocafe.all.domain.ChatMemberId
+import com.robocafe.all.domain.models.ChatInfo
+import com.robocafe.all.domain.models.ChatMemberInfo
 import com.robocafe.all.session.SessionService
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.security.core.Authentication
@@ -47,11 +47,11 @@ class PersonController @Autowired constructor(
         val chat = sessionService.startChat(chatId, body.chatName,
                 body.members.map { chatUtils.mapToDomainMemberId(it) }.plus(myChatId).toSet())
         return OutboundChatInfo(chat.id, chat.name,
-                chatUtils.mapToOutboundMember(myChatId),
+                chatUtils.mapToOutboundMember(myChatId.toChatMemberInfo()),
                 chat.members.map(chatUtils::mapToOutboundMember).toSet())
     }
 
-    private fun checkAuthorityForChat(myMemberId: ChatMemberId, chat: com.robocafe.all.application.services.ChatInfo) {
+    private fun checkAuthorityForChat(myMemberId: ChatMemberInfo, chat: ChatInfo) {
         if (!chat.members.contains(myMemberId)) {
             throw UnauthorizedForThisChat()
         }
@@ -61,7 +61,7 @@ class PersonController @Autowired constructor(
     fun getChatMessages(@PathVariable chatId: String, authentication: Authentication): List<OutboundMessageInfo> {
         val myMemberId = chatUtils.mapToDomainMemberId(authentication.name)
         val chat = sessionService.findChat(chatId)
-        checkAuthorityForChat(myMemberId, chat)
+        checkAuthorityForChat(myMemberId.toChatMemberInfo(), chat)
         return chat.messages.map(this.chatUtils::mapToOutboundMessageInfo).toList()
     }
 
@@ -69,7 +69,7 @@ class PersonController @Autowired constructor(
     fun sendMessage(@PathVariable chatId: String, authentication: Authentication, @RequestBody body: SendMessageModel) {
         val myMemberId = chatUtils.mapToDomainMemberId(authentication.name)
         val chat = sessionService.findChat(chatId)
-        checkAuthorityForChat(myMemberId, chat)
+        checkAuthorityForChat(myMemberId.toChatMemberInfo(), chat)
         sessionService.sendMessage(UUID.randomUUID().toString(), chatId, myMemberId, body.text)
     }
 
@@ -77,7 +77,7 @@ class PersonController @Autowired constructor(
     fun addMember(@PathVariable chatId: String, authentication: Authentication, @RequestBody body: AddMemberModel) {
         val myMemberId = chatUtils.mapToDomainMemberId(authentication.name)
         val chat = sessionService.findChat(chatId)
-        checkAuthorityForChat(myMemberId, chat)
+        checkAuthorityForChat(myMemberId.toChatMemberInfo(), chat)
         sessionService.addMemberToChat(chatId, chatUtils.mapToDomainMemberId(body.member))
     }
 }

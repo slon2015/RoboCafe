@@ -4,29 +4,15 @@ import com.robocafe.all.application.repositories.ChatRepository
 import com.robocafe.all.application.repositories.MessageRepository
 import com.robocafe.all.domain.Chat
 import com.robocafe.all.domain.ChatMember
-import com.robocafe.all.domain.ChatMemberId
 import com.robocafe.all.domain.Message
+import com.robocafe.all.domain.models.ChatInfo
+import com.robocafe.all.domain.models.ChatMemberInfo
+import com.robocafe.all.domain.models.DetalizedChatMemberInfo
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
 
-data class MessageInfo(
-        val id: String, val text: String,
-        val author: ChatMemberId
-) {
-    constructor(data: Message): this(data.messageId.id, data.text, data.author.chatMemberId)
-}
 
-data class ChatInfo(
-        val id: String,
-        val name: String,
-        val members: Set<ChatMemberId>,
-        val messages: List<MessageInfo>
-) {
-    constructor(data: Chat): this(data.id, data.name, data.members.map { it.chatMemberId }.toSet(),
-            data.messages.map { MessageInfo(it) }
-    )
-}
 
 @Service
 class ChatService @Autowired constructor(
@@ -35,14 +21,13 @@ class ChatService @Autowired constructor(
 ) {
 
     @Throws(PersonNotFound::class, PersonsPartyEnded::class, PartyNotFound::class, PartyAlreadyEnded::class)
-    fun startChat(chatId: String, chatName: String, members: Set<ChatMemberId>): ChatInfo {
-        val mappedMembers = members.map { ChatMemberId(it.partyId, it.personId) }.toMutableSet()
-        val chat = Chat.startChat(chatId, chatName, mappedMembers)
+    fun startChat(chatId: String, chatName: String, members: Set<DetalizedChatMemberInfo>): ChatInfo {
+        val chat = Chat.startChat(chatId, chatName, members)
         chatRepository.save(chat)
         return ChatInfo(chat)
     }
 
-    fun getChatsFor(chatMemberId: ChatMemberId): Set<ChatInfo> {
+    fun getChatsFor(chatMemberId: ChatMemberInfo): Set<ChatInfo> {
         return chatRepository.findByMembersContains(ChatMember(chatMemberId)).map { ChatInfo(it) }.toSet()
     }
 
@@ -57,22 +42,26 @@ class ChatService @Autowired constructor(
 
     @Throws(ChatNotFound::class, MemberAlreadyInChat::class,
             PersonNotFound::class, PersonsPartyEnded::class, PartyNotFound::class, PartyAlreadyEnded::class)
-    fun addMemberToChat(chatId: String, member: ChatMemberId) {
-        val mappedMember = ChatMemberId(member.partyId, member.personId)
+    fun addMemberToChat(chatId: String, member: DetalizedChatMemberInfo) {
         val chat = getChat(chatId)
-        chat.joinMemberToChat(mappedMember)
+        chat.joinMemberToChat(member)
         chatRepository.save(chat)
     }
 
     @Throws(ChatNotFound::class, MemberNotInChat::class)
-    fun removeMemberFromChat(chatId: String, chatMemberId: ChatMemberId) {
+    fun removeMemberFromChat(chatId: String, chatMemberId: DetalizedChatMemberInfo) {
         val chat = getChat(chatId)
         chat.removeMemberFromChat(chatMemberId)
         chatRepository.save(chat)
     }
 
     @Throws(ChatNotFound::class, MemberNotInChat::class, ChatMemberNotFound::class)
-    fun sendMessage(messageId: String, chatId: String, memberId: ChatMemberId, text: String) {
+    fun sendMessage(
+            messageId: String,
+            chatId: String,
+            memberId: DetalizedChatMemberInfo,
+            text: String
+    ) {
         val chat = getChat(chatId)
         chat.sendMessage(messageId, text, memberId)
         chatRepository.save(chat)
