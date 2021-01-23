@@ -65,7 +65,7 @@ class Chat(@field:Id val id: String,
         fun startChat(id: String, name: String, ids: Set<DetalizedChatMemberInfo> = HashSet()): Chat {
             val members = ids.map { ChatMember(it) }.toMutableSet()
             val chat = Chat(id, name, members)
-            chat.registerEvent(ChatStarted(chat.chatId, name, ids))
+            chat.registerEvent(ChatStarted(chat.chatId.id, name, ids))
             return chat
         }
     }

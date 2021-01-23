@@ -7,7 +7,7 @@ import com.robocafe.all.events.dispatching.SendToHall
 
 @SendToHall("/chats/start")
 data class ChatStarted(
-        val chatId: ChatId,
+        val chatId: String,
         val name: String,
         val members: Set<DetalizedChatMemberInfo>
 ): DomainEvent {
