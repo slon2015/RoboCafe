@@ -4,6 +4,7 @@ import com.robocafe.all.domain.models.PartyScopedPersonInfo
 import com.robocafe.all.domain.models.PartyScopedTableInfo
 import com.robocafe.all.events.dispatching.SendToHall
 import com.robocafe.all.events.dispatching.SendToParty
+import com.robocafe.all.events.dispatching.SendToPerson
 
 
 @SendToHall("/parties/start")
@@ -68,15 +69,22 @@ data class PartyEnded(val table: PartyScopedTableInfo,
     }
 }
 @SendToParty("/member/balance/change")
+@SendToPerson("/balance/change")
 data class MemberBalanceChanged(
         override val partyId: String,
-        val memberId: String,
+        override val personId: String,
         val amount: Double // Balance increment value
-): PartyDomainEvent {
+): PartyDomainEvent, PersonDomainEvent {
     override fun convertForParty(): Any {
         return mapOf(
-                "memberId" to memberId,
+                "memberId" to personId,
                 "amount" to amount
+        )
+    }
+
+    override fun convertForPerson(): Any {
+        return mapOf(
+                "increment" to amount
         )
     }
 }
