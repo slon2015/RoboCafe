@@ -2,12 +2,12 @@ package com.robocafe.all.menu
 
 import javax.persistence.*
 
-enum class Category(val parent: Category? = null) {
-    FOOD,
-    DRINKS,
-    COMBO_MEALS(FOOD),
-    TEA(DRINKS),
-    JUICE(DRINKS)
+enum class Category(val ru: String? = null, val parent: Category? = null) {
+    FOOD("Еда"),
+    DRINKS("Напитки"),
+    COMBO_MEALS("Комбо-обеды", FOOD),
+    TEA("Чай", DRINKS),
+    JUICE("Сок", DRINKS)
 }
 
 @Entity

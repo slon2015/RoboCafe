@@ -1,15 +1,12 @@
 package com.robocafe.all.application.handlers
 
 import com.robocafe.all.application.handlers.models.FullMenuInfo
-import com.robocafe.all.menu.Category
-import com.robocafe.all.menu.PositionInfo
-import com.robocafe.all.menu.PositionService
+import com.robocafe.all.application.handlers.models.LocalizedCategoryHierarchyTree
+import com.robocafe.all.application.handlers.models.LocalizedCategoryHierarchyTreeNode
+import com.robocafe.all.menu.*
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.http.ResponseEntity
-import org.springframework.web.bind.annotation.GetMapping
-import org.springframework.web.bind.annotation.PathVariable
-import org.springframework.web.bind.annotation.RequestMapping
-import org.springframework.web.bind.annotation.RestController
+import org.springframework.web.bind.annotation.*
 
 @RestController
 @RequestMapping("/menu")
@@ -17,11 +14,36 @@ class MenuController @Autowired constructor(
         private val positionService: PositionService
 ) {
 
+    private fun localizeNode(node: CategoryHierarchyTreeNode,
+                             localization: String?): LocalizedCategoryHierarchyTreeNode {
+        return LocalizedCategoryHierarchyTreeNode(
+                if ("ru" == localization && node.category.ru != null)
+                    node.category.ru else node.category.toString(),
+                node.childes?.map { localizeNode(it, localization) }?.toSet()
+        )
+    }
+
+    private fun localizeCategoryHierarchy(
+            nativeHierarchy: CategoryHierarchyTree,
+            localization: String?
+    ): LocalizedCategoryHierarchyTree {
+        return LocalizedCategoryHierarchyTree(
+                nativeHierarchy.rootNodes.map {
+                    localizeNode(it, localization)
+                }.toSet()
+        )
+    }
+
     @GetMapping
-    fun fullMenu(): ResponseEntity<FullMenuInfo> {
+    fun fullMenu(@RequestParam localisation: String?): ResponseEntity<FullMenuInfo> {
         return ResponseEntity.ok(
-                FullMenuInfo(positionService.getCategoryHierarchy(),
-                    positionService.getAllPositions())
+                FullMenuInfo(
+                    localizeCategoryHierarchy(
+                            positionService.getCategoryHierarchy(),
+                            localisation
+                    ),
+                    positionService.getAllPositions()
+                )
         )
     }
 
