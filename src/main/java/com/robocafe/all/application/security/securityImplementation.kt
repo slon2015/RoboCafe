@@ -112,7 +112,7 @@ class JwtFilter @Autowired constructor(
                 logger.warn("JWT decoding failed", e)
             }
             catch (e: UsernameNotFoundException) {
-                throw SecurityObjectNotFound()
+                logger.error("Username for token not found", e)
             }
         }
         chain.doFilter(request, response)
