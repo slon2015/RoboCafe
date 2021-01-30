@@ -4,10 +4,7 @@ import com.robocafe.all.afiche.AficheService
 import com.robocafe.all.application.handlers.models.HallStateInitInfo
 import com.robocafe.all.application.services.*
 import com.robocafe.all.domain.*
-import com.robocafe.all.domain.models.ChatInfo
-import com.robocafe.all.domain.models.ChatMemberInfo
-import com.robocafe.all.domain.models.DetalizedChatMemberInfo
-import com.robocafe.all.domain.models.PartyScopedPersonInfo
+import com.robocafe.all.domain.models.*
 import com.robocafe.all.hallscheme.HallStateService
 import com.robocafe.all.menu.PositionService
 import org.springframework.beans.factory.annotation.Autowired

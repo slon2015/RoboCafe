@@ -6,6 +6,7 @@ import kotlin.Throws
 import com.robocafe.all.domain.Party
 import com.robocafe.all.domain.Person
 import com.robocafe.all.domain.models.PartyScopedPersonInfo
+import com.robocafe.all.domain.models.TableInfo
 import org.springframework.stereotype.Service
 import java.time.Instant
 
@@ -32,7 +33,7 @@ class PartyService @Autowired constructor(
     }
 
     @Throws(TableNotFound::class, TableNotFree::class, TablePersonsCountLowerThanPartyMembersCount::class)
-    fun startParty(tableInfo: TableInfo,partyId: String, membersCount: Int): PartyInfo {
+    fun startParty(tableInfo: TableInfo, partyId: String, membersCount: Int): PartyInfo {
         val newParty = Party.startParty(
                 partyId,
                 tableInfo.id,

@@ -1,5 +1,6 @@
 package com.robocafe.all.domain
 
+import com.robocafe.all.domain.models.TableInfo
 import org.springframework.data.domain.AbstractAggregateRoot
 import javax.persistence.Entity
 import javax.persistence.EnumType
@@ -23,7 +24,7 @@ class Table(@field:Id val id: String, val tableNumber: Int, val maxPersons: Int)
 
     fun freeTable() {
         status = TableStatus.AWAITS_CLEANING
-        registerEvent(TableReleased(id))
+        registerEvent(TableReleased(TableInfo(this)))
     }
 
     fun cleanTable() {

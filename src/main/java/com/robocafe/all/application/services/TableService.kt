@@ -2,15 +2,9 @@ package com.robocafe.all.application.services
 
 import com.robocafe.all.application.repositories.TableRepository
 import com.robocafe.all.domain.Table
-import com.robocafe.all.domain.TableStatus
+import com.robocafe.all.domain.models.TableInfo
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
-
-data class TableInfo(
-        val id: String, val tableNumber: Int, val maxPersons: Int, val status: TableStatus
-) {
-    constructor(data: Table): this(data.id, data.tableNumber, data.maxPersons, data.status)
-}
 
 @Service
 class TableService @Autowired constructor(private val repository: TableRepository) {
