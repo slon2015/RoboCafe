@@ -20,6 +20,13 @@ class PersonController @Autowired constructor(
         private val chatUtils: ChatUtils
 ) {
 
+    @DeleteMapping
+    fun leaveParty(authentication: Authentication) {
+        val personId = authentication.name
+        val partyId = sessionService.getPartyForPerson(personId).id
+        sessionService.removePersonFromParty(partyId, personId)
+    }
+
     @PostMapping("/order")
     fun makeOrder(@RequestBody body: MakeOrderModel, authentication: Authentication): OrderInfo {
         val personId = authentication.name

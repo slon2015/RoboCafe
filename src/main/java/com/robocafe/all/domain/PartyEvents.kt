@@ -60,7 +60,7 @@ data class PartyEnded(val table: PartyScopedTableInfo,
                       override val partyId: String): PartyDomainEvent {
     override fun convertForHall(): Any {
         return mapOf(
-                "tableNum" to table.tableId
+                "tableNum" to table.tableNum
         )
     }
 
