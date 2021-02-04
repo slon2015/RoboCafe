@@ -1,0 +1,3 @@
+[submodule "RoboCafeFront"]
+	path = RoboCafeFront
+	url = https://github.com/slon2015/RoboCafeFront.git
