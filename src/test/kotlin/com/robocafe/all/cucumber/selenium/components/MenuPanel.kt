@@ -12,22 +12,30 @@ class MenuPanel(private val webElement: WebElement, val place: Int) {
                 By.xpath(".//div[2]/div/div")
         ).map { MenuPosition(it) }.toList()
 
-    fun openCart() {
+    fun openCart(webDriver: WebDriver) {
         if (cartOpened()) {
             return
         }
         webElement.findElement(
                 By.xpath(".//div[1]/div/ul/li/button")
         ).click()
+
+        WebDriverWait(webDriver, 10).until {
+            cartOpened()
+        }
     }
 
-    fun closeCart() {
+    fun closeCart(webDriver: WebDriver) {
         if (!cartOpened()) {
             return
         }
         webElement.findElement(
                 By.xpath("//*[@id=\"$place-cart-popover\"]/div[1]")
         ).click()
+
+        WebDriverWait(webDriver, 10).until {
+            !cartOpened()
+        }
     }
 
     fun cartOpened(): Boolean {
@@ -43,16 +51,15 @@ class MenuPanel(private val webElement: WebElement, val place: Int) {
     }
 
     fun getOrderPositions(parentDriver: WebDriver): List<OrderPosition> {
-        openCart()
-        WebDriverWait(parentDriver, 10).until {
-            cartOpened()
+        val cartWasOpened = cartOpened()
+        if (!cartWasOpened) {
+            openCart(parentDriver)
         }
         val positions = webElement.findElements(
                 By.xpath("//*[@id=\"$place-cart-popover\"]/div[3]/div/div[1]/ul/li")
         ).map { OrderPosition(it) }.toList()
-        closeCart()
-        WebDriverWait(parentDriver, 10).until {
-            !cartOpened()
+        if (!cartWasOpened) {
+            closeCart(parentDriver)
         }
         return positions
     }

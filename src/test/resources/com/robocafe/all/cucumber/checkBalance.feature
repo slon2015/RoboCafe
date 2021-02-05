@@ -7,14 +7,16 @@ Scenario: Zero balance on session start
   Then Balance of person 1 on table 1 equals 0
 
 Scenario: Balance updates after making order
-  Given Registered table with number 1
+  Given Created food type with name "Блины с мясом" and cost 150
+  And Registered table with number 1
   When Started party for single person
   And Move to cart "Блины с мясом" with amount 1
   And Making order
   Then Balance of person 1 on table 1 equals 150
 
-Scenario: Balance correctness after reloading
-  Given Registered table with number 1
+Scenario: Balance still correct after reloading
+  Given Created food type with name "Блины с мясом" and cost 150
+  And Registered table with number 1
   When Started party for single person
   And Move to cart "Блины с мясом" with amount 1
   And Making order

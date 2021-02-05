@@ -26,25 +26,26 @@ class OrderSteps @Autowired constructor(val tablesSteps: TablesSteps) {
         })
         position.amountManager.setAmount(amount)
         position.addToCart()
+        menu.openCart(table.webDriver)
         WebDriverWait(table.webDriver, 10).ignoring(NumberFormatException::class.java).until {
             val currentPositionAmount = menu.getOrderPositions(table.webDriver)
                     .map { OrderPositionData(it) }
                     .find { it.name.equals(normalizedFoodName, ignoreCase = true) }?.amount ?: 0
             currentPositionAmount - amount == prevPositionAmount
         }
+        menu.closeCart(table.webDriver)
     }
 
     private fun makeOrderHelper(table: Table, person: Int) {
         val menu = table.getMainPanelFor(person).openMenuPanel()
-        menu.openCart()
-        WebDriverWait(table.webDriver, 10).until {
-            menu.cartOpened()
-        }
+        menu.openCart(table.webDriver)
         menu.submitCart()
+        menu.openCart(table.webDriver)
         WebDriverWait(table.webDriver, 10).until {
             menu.getOrderPositions(table.webDriver)
                     .isEmpty()
         }
+        menu.closeCart(table.webDriver)
     }
 
     @When("Move to cart {string} with amount {int}")
