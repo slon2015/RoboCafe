@@ -38,9 +38,44 @@ dependencies {
     runtimeOnly("io.jsonwebtoken:jjwt-jackson:0.11.2")
     runtimeOnly("com.h2database:h2")
     runtimeOnly("org.mariadb.jdbc:mariadb-java-client")
+    testRuntimeOnly("com.h2database:h2")
+    testRuntimeOnly("io.jsonwebtoken:jjwt-impl:0.11.2")
+    testRuntimeOnly("io.jsonwebtoken:jjwt-jackson:0.11.2")
     testImplementation("org.springframework.boot:spring-boot-starter-test")
     testImplementation("io.projectreactor:reactor-test")
     testImplementation("org.springframework.security:spring-security-test")
+    testImplementation("io.cucumber:cucumber-java:6.8.1")
+    testImplementation("io.cucumber:cucumber-spring:6.8.1")
+    testImplementation("io.cucumber:cucumber-junit:6.8.1")
+    testImplementation("org.seleniumhq.selenium:selenium-java")
+    testImplementation("org.seleniumhq.selenium:selenium-chrome-driver")
+}
+
+configurations.create("cucumberRuntime").extendsFrom(configurations.testImplementation.get(),
+        configurations.testRuntimeOnly.get())
+
+task<JavaExec>("cucumber") {
+    val frontendServer: Boolean = System.getProperty("devServer") != null
+    dependsOn(
+            tasks.findByPath("assemble"),
+            tasks.findByPath("testClasses")
+    )
+    if (!frontendServer) {
+        dependsOn(tasks.findByPath(":RoboCafeFront:npm_run_build"))
+    }
+    group = "verification"
+    main = "io.cucumber.core.cli.Main"
+    classpath(configurations["cucumberRuntime"],
+            sourceSets.main.get().output,
+            sourceSets.test.get().output)
+    args("--plugin", "pretty", "--glue", "com.robocafe.all.cucumber", "src/test/resources")
+    if (!frontendServer) {
+        systemProperty("spring.resources.static-locations", "RoboCafeFront/build")
+    }
+    else {
+        systemProperty("frontendServer", "http://localhost:3000")
+    }
+
 }
 
 tasks.withType<Test> {
@@ -54,9 +89,16 @@ tasks.withType<KotlinCompile> {
     }
 }
 
+//tasks.getByName("build") {
+//    dependsOn(project(":RoboCafeFront").tasks.findByName("npm_run_build"))
+//}
+
 tasks.withType<BootJar> {
     exclude("application-dev*.yml")
     exclude("db/devMigrations")
+    from("RoboCafeFront/build") {
+        into("static")
+    }
 }
 
 val imageVersion = System.getenv("IMAGE_VERSION") ?: "dev"

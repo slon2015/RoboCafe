@@ -23,10 +23,10 @@ class Table(val webDriver: WebDriver) {
 
     val activeWindowType: TableActiveWindow get() {
         try {
-            val headerText = webDriver.findElement(
-                    By.xpath("/html/body/div[2]/div[3]/div/header/div/h6")
-            ).text
-            if (headerText == "Регистрация стола") return TableActiveWindow.RegistrationForm
+            webDriver.findElement(
+                    By.id("tableRegistrationForm")
+            )
+            return TableActiveWindow.RegistrationForm
         }
         catch (e: NoSuchElementException) {}
         try {
