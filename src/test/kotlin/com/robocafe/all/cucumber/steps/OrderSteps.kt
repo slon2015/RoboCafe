@@ -1,13 +1,26 @@
 package com.robocafe.all.cucumber.steps
 
+import com.robocafe.all.application.services.OrderInfo
+import com.robocafe.all.application.services.OrderPositionInfo
 import com.robocafe.all.cucumber.selenium.components.OrderPosition
 import com.robocafe.all.cucumber.selenium.components.Table
+import com.robocafe.all.cucumber.wait
+import com.robocafe.all.domain.OrderStatus
+import com.robocafe.all.menu.PositionService
+import com.robocafe.all.session.SessionService
+import io.cucumber.java.PendingException
+import io.cucumber.java.en.Then
 import io.cucumber.java.en.When
 import org.openqa.selenium.support.ui.WebDriverWait
 import org.springframework.beans.factory.annotation.Autowired
+import java.lang.IndexOutOfBoundsException
 import java.lang.NumberFormatException
 
-class OrderSteps @Autowired constructor(val tablesSteps: TablesSteps) {
+class OrderSteps @Autowired constructor(
+        val tablesSteps: TablesSteps,
+        val sessionService: SessionService,
+        val positionService: PositionService
+) {
 
     data class OrderPositionData(val name: String, val amount: Int) {
         constructor(data: OrderPosition): this(data.name, data.amountManager.amount)
@@ -58,5 +71,64 @@ class OrderSteps @Autowired constructor(val tablesSteps: TablesSteps) {
     fun makeOrder() {
         val table = requireNotNull(tablesSteps.selectedTable)
         makeOrderHelper(table, requireNotNull(table.selectedPerson))
+    }
+
+    @Then("Orders panel contains {int} order position for {string} with scheduled status")
+    fun checkOrderInPanelWaitingStatus(positionsCount: Int, foodName: String) {
+        throw PendingException()
+    }
+
+    @Then("Orders panel contains {int} order position for {string} with preparing status")
+    fun checkOrderInPanelPreparingStatus(positionsCount: Int, foodName: String) {
+        throw PendingException()
+    }
+
+    data class OrderAndPosition(
+            val order: OrderInfo,
+            val position: OrderPositionInfo
+    ) {
+        constructor(data: Pair<OrderPositionInfo, OrderInfo>): this(data.second, data.first)
+    }
+
+    private fun selectPositions(positionsCount: Int, foodName: String, status: OrderStatus): List<OrderAndPosition> {
+        val table = sessionService.getTableByNumber(tablesSteps.selectedTable!!.tableNum)
+        val person = sessionService.getActivePartyForTable(table.id).members.find {
+            it.place == tablesSteps.selectedTable!!.selectedPerson
+        }!!
+        val positions = sessionService.getOpenOrdersForPerson(person.id).flatMap {
+            it.positions.map { position -> position to it }
+        }.map { it to positionService.getPositionInfo(it.first.menuPositionId).name }
+                .filter { it.second == foodName &&
+                        it.first.first.orderStatus == status }
+                .subList(0, positionsCount).map { it.first }
+        return positions.map { OrderAndPosition(it) }
+    }
+
+    @When("Changing status {int} of {string} on preparing")
+    fun movePositionStatusToPreparing(positionsCount: Int, foodName: String) {
+        val positions = wait(
+                { selectPositions(positionsCount, foodName, OrderStatus.WAITING) },
+                IndexOutOfBoundsException::class
+        ) // Wait changes saving into db
+
+        positions.forEach {
+            sessionService.startPositionPreparing(it.order.id, it.position.id)
+        }
+    }
+
+    @When("Changing status {int} of {string} on completed")
+    fun movePositionStatusToCompleted(positionsCount: Int, foodName: String) {
+        val positions = wait(
+                { selectPositions(positionsCount, foodName, OrderStatus.WAITING) },
+                IndexOutOfBoundsException::class
+        )
+
+        positions.forEach {
+            sessionService.startPositionPreparing(it.order.id, it.position.id)
+            sessionService.finishPositionPreparing(it.order.id, it.position.id)
+            sessionService.finishPositionDelivering(it.order.id, it.position.id)
+        }
+
+        Thread.sleep(100)
     }
 }

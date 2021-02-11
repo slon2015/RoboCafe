@@ -134,13 +134,13 @@ class AmountManager(val webElement: WebElement) {
         ).click()
     }
 
-    fun setAmount(amount: Int) {
-        if (amount <= 0) {
+    fun setAmount(expectedAmount: Int) {
+        if (expectedAmount <= 0) {
             return
         }
         var currentAmount = amount
-        while (currentAmount != amount) {
-            if (currentAmount > amount) {
+        while (currentAmount != expectedAmount) {
+            if (currentAmount > expectedAmount) {
                 decrement()
                 currentAmount -= 1
             }

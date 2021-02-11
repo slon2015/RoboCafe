@@ -13,11 +13,20 @@ class MenuSteps @Autowired constructor(
 
     @Given("Created food type with name {string} and cost {double}")
     fun createFoodType(name: String, cost: Double) {
+        createMenuPosition(name, cost, Category.FOOD)
+    }
+
+    @Given("Created food type with name {string}")
+    fun createFoodTypeWithoutPrice(name: String) {
+        createMenuPosition(name, 100.0, Category.FOOD)
+    }
+
+    private fun createMenuPosition(name: String, cost: Double, category: Category) {
         menuPositionRepository.save(
                 Position(
                         UUID.randomUUID().toString(),
                         name,
-                        mutableSetOf(Category.FOOD),
+                        mutableSetOf(category),
                         cost,
                         null
                 )

@@ -30,7 +30,7 @@ class TablesSteps: SpringIntegrationTest() {
         val options = ChromeOptions()
         options.addArguments("--incognito")
         val webDriver: WebDriver = ChromeDriver(options)
-        val table = Table(webDriver)
+        val table = Table(webDriver, tableNumber)
         table.registrationForm.registerTable(tableNumber)
         tables[tableNumber] = table
         selectTable(tableNumber)

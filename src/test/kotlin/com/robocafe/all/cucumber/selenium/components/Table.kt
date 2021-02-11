@@ -14,7 +14,7 @@ enum class TableActiveWindow {
 class InvalidStateException: RuntimeException()
 class MainPanelNotFound: RuntimeException()
 
-class Table(val webDriver: WebDriver) {
+class Table(val webDriver: WebDriver, val tableNum: Int) {
     var selectedPerson: Int? = null
     init {
         val frontendServer = System.getProperty("frontendServer", "http://localhost:8080/static/index.html")
