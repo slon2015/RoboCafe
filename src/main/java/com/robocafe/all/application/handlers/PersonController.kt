@@ -34,6 +34,11 @@ class PersonController @Autowired constructor(
         return sessionService.createOrder(OrderAuthorData(partyId, personId), body.positions)
     }
 
+    @DeleteMapping("/order/positions/{positionId}")
+    fun cancelPosition(authentication: Authentication, @PathVariable positionId: String) {
+        sessionService.cancelOrderPosition(positionId, authentication.name)
+    }
+
     @GetMapping("/view/balance")
     fun getPersonBalance(authentication: Authentication): Double {
         val personId = authentication.name

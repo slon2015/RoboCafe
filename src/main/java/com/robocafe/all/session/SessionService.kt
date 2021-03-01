@@ -271,7 +271,13 @@ class SessionService @Autowired constructor(
         orderAuthorData checkPartyIn(partyService) checkMemberIn(personService)
         val price = positions calculatePriceWith positionService
         val orderId = UUID.randomUUID().toString()
-        return orderService.createOrder(orderId, orderAuthorData, positions, price)
+        val info = orderService.createOrder(orderId, orderAuthorData, positions, price)
+        changeMemberBalance(orderAuthorData.partyId, orderAuthorData.memberId, price)
+        return info
+    }
+
+    fun cancelOrderPosition(positionId: String, personId: String) {
+        orderService.cancelOrderPosition(positionId, personId)
     }
 
     fun getUnpayedBalanceForParty(partyId: String) =

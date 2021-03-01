@@ -2,6 +2,7 @@ package com.robocafe.all.cucumber.steps
 
 import com.robocafe.all.application.services.OrderInfo
 import com.robocafe.all.application.services.OrderPositionInfo
+import com.robocafe.all.cucumber.selenium.components.CartPosition
 import com.robocafe.all.cucumber.selenium.components.OrderPosition
 import com.robocafe.all.cucumber.selenium.components.Table
 import com.robocafe.all.cucumber.wait
@@ -11,6 +12,7 @@ import com.robocafe.all.session.SessionService
 import io.cucumber.java.PendingException
 import io.cucumber.java.en.Then
 import io.cucumber.java.en.When
+import org.junit.jupiter.api.Assertions
 import org.openqa.selenium.support.ui.WebDriverWait
 import org.springframework.beans.factory.annotation.Autowired
 import java.lang.IndexOutOfBoundsException
@@ -23,14 +25,14 @@ class OrderSteps @Autowired constructor(
 ) {
 
     data class OrderPositionData(val name: String, val amount: Int) {
-        constructor(data: OrderPosition): this(data.name, data.amountManager.amount)
+        constructor(data: CartPosition): this(data.name, data.amountManager.amount)
     }
 
     private fun moveToCartHelper(table: Table, person: Int, foodName: String, amount: Int) {
         val normalizedFoodName = foodName.trim()
         val menu = table.getMainPanelFor(person).openMenuPanel()
 
-        val prevPositionAmount = menu.getOrderPositions(table.webDriver)
+        val prevPositionAmount = menu.getCartPositions(table.webDriver)
                 .map { OrderPositionData(it) }
                 .find { it.name.equals(normalizedFoodName, ignoreCase = true) }?.amount ?: 0
 
@@ -41,7 +43,7 @@ class OrderSteps @Autowired constructor(
         position.addToCart()
         menu.openCart(table.webDriver)
         WebDriverWait(table.webDriver, 10).ignoring(NumberFormatException::class.java).until {
-            val currentPositionAmount = menu.getOrderPositions(table.webDriver)
+            val currentPositionAmount = menu.getCartPositions(table.webDriver)
                     .map { OrderPositionData(it) }
                     .find { it.name.equals(normalizedFoodName, ignoreCase = true) }?.amount ?: 0
             currentPositionAmount - amount == prevPositionAmount
@@ -55,7 +57,7 @@ class OrderSteps @Autowired constructor(
         menu.submitCart()
         menu.openCart(table.webDriver)
         WebDriverWait(table.webDriver, 10).until {
-            menu.getOrderPositions(table.webDriver)
+            menu.getCartPositions(table.webDriver)
                     .isEmpty()
         }
         menu.closeCart(table.webDriver)
@@ -73,14 +75,32 @@ class OrderSteps @Autowired constructor(
         makeOrderHelper(table, requireNotNull(table.selectedPerson))
     }
 
+    fun checkOrderPositionsHelper(positionsCount: Int, foodName: String, state: String) {
+        val table = tablesSteps.selectedTable!!
+        val mainPanel = table.getMainPanelFor(table.selectedPerson!!)
+        mainPanel.openOrdersPanel(table.webDriver)
+        lateinit var positions: List<OrderPosition>
+        WebDriverWait(table.webDriver, 10).until {
+            positions = mainPanel.getOrderPositions(table.webDriver)
+            positions.isNotEmpty()
+        }
+        val actualCount = positions.filter {
+            it.name == foodName && it.status == state
+        }.size
+        mainPanel.closeOrdersPanel(table.webDriver)
+        Assertions.assertEquals(positionsCount, actualCount)
+    }
+
+
+
     @Then("Orders panel contains {int} order position for {string} with scheduled status")
     fun checkOrderInPanelWaitingStatus(positionsCount: Int, foodName: String) {
-        throw PendingException()
+        checkOrderPositionsHelper(positionsCount, foodName, "Ожидает приготовления")
     }
 
     @Then("Orders panel contains {int} order position for {string} with preparing status")
     fun checkOrderInPanelPreparingStatus(positionsCount: Int, foodName: String) {
-        throw PendingException()
+        checkOrderPositionsHelper(positionsCount, foodName, "В процессе приготовления")
     }
 
     data class OrderAndPosition(

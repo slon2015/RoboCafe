@@ -28,7 +28,7 @@ class TablesSteps: SpringIntegrationTest() {
     @Given("Registered table with number {int}")
     fun registerTable(tableNumber: Int) {
         val options = ChromeOptions()
-        options.addArguments("--incognito")
+        options.addArguments("--incognito", "--start-maximized")
         val webDriver: WebDriver = ChromeDriver(options)
         val table = Table(webDriver, tableNumber)
         table.registrationForm.registerTable(tableNumber)

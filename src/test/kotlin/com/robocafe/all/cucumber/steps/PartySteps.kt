@@ -6,6 +6,7 @@ import io.cucumber.java.en.When
 import io.cucumber.spring.ScenarioScope
 import org.openqa.selenium.support.ui.WebDriverWait
 import org.springframework.beans.factory.annotation.Autowired
+import java.util.concurrent.TimeUnit
 
 @ScenarioScope
 class PartySteps @Autowired constructor(val tablesSteps: TablesSteps): SpringIntegrationTest() {
@@ -14,6 +15,7 @@ class PartySteps @Autowired constructor(val tablesSteps: TablesSteps): SpringInt
         WebDriverWait(tablesSteps.selectedTable!!.webDriver, 10).until {
             tablesSteps.selectedTable!!.activeWindowType == TableActiveWindow.MainPanels
         }
+        Thread.sleep(1000)
     }
 
     @When("Started party for {int} persons")

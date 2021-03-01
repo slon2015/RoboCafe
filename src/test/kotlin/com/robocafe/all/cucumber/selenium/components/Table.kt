@@ -38,7 +38,7 @@ class Table(val webDriver: WebDriver, val tableNum: Int) {
         catch (e: NoSuchElementException) {}
         try {
             webDriver.findElement(
-                    By.xpath("//*[@id=\"root\"]/div[1]/div/div/div/ul")
+                    By.id("1-person-panel")
             )
             return TableActiveWindow.MainPanels
         }

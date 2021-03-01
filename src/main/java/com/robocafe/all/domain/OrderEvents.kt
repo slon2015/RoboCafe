@@ -1,5 +1,7 @@
 package com.robocafe.all.domain
 
+import com.robocafe.all.events.dispatching.SendToPerson
+
 data class OrderPositionPoint(val menuPositionId: String,
                               val positionId: String) {
     constructor(data: OrderPosition): this(data.menuPositionId, data.id)
@@ -19,6 +21,27 @@ data class OrderPriceChanged(
 data class OrderRemoved(val orderId: String): DomainEvent
 data class OrderCompleted(val orderId: String): DomainEvent
 
-data class PositionStartPreparing(val orderId: String, val positionId: String): DomainEvent
-data class PositionDone(val orderId: String, val positionId: String): DomainEvent
-data class PositionDelivered(val orderId: String, val positionId: String): DomainEvent
+@SendToPerson("/orders/positions/status/preparing")
+data class PositionStartPreparing(
+        override val personId: String,
+        val orderId: String,
+        val positionId: String
+): PersonDomainEvent
+@SendToPerson("/orders/positions/status/done")
+data class PositionDone(
+        override val personId: String,
+        val orderId: String,
+        val positionId: String
+): PersonDomainEvent
+@SendToPerson("/orders/positions/status/delivered")
+data class PositionDelivered(
+        override val personId: String,
+        val orderId: String,
+        val positionId: String
+): PersonDomainEvent
+@SendToPerson("/orders/positions/cancel")
+data class PositionCancelled(
+        override val personId: String,
+        val orderId: String,
+        val positionId: String
+): PersonDomainEvent

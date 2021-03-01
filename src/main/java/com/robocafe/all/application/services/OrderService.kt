@@ -52,6 +52,10 @@ class OrderService @Autowired constructor(
             operation(this)
         }
 
+        infix fun OrderPosition.operate(operation: OrderPosition.() -> Unit) {
+            operation(this)
+        }
+
         fun Order.assertPositionContainsInOrder(positionId: String): OrderPosition {
             return positions.find { it.id == positionId } ?: throw PositionNotInOrder()
         }
@@ -73,10 +77,18 @@ class OrderService @Autowired constructor(
                 throw IncorrectPositionStatus()
             }
         }
+
+        fun OrderPosition.assertIsWaiting() {
+            if (orderStatus != OrderStatus.WAITING) {
+                throw IncorrectPositionStatus()
+            }
+        }
     }
 
     private fun findOrder(orderId: String) =
             orderRepository.findById(orderId).orElseThrow { OrderNotFound() }
+    private fun findPosition(positionId: String) =
+            orderPositionRepository.findById(positionId).orElseThrow { PositionNotFound() }
 
     fun getOrder(orderId: String) = OrderInfo(findOrder(orderId))
 
@@ -120,6 +132,14 @@ class OrderService @Autowired constructor(
             assertOrderNotCompleted()
             removeOrder()
             saveChanges()
+        }
+    }
+
+    fun cancelOrderPosition(positionId: String, personId: String) {
+        findPosition(positionId) operate {
+            assertIsWaiting()
+            order.cancelPosition(this, personId)
+            order.saveChanges()
         }
     }
 

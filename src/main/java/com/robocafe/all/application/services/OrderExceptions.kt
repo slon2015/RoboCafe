@@ -4,6 +4,7 @@ class InvalidParty: DomainException()
 class InvalidPerson: DomainException()
 
 class OrderNotFound: EntityNotFound()
+class PositionNotFound: EntityNotFound()
 class IncorrectPositionStatus: DomainException()
 class OrderAlreadyClosed: DomainException()
 class OrderAlreadyCompleted: DomainException()

@@ -48,7 +48,7 @@ class Order(
     var closeCause: CloseCause? = null
 
     @OneToMany(mappedBy = "order", cascade = [CascadeType.ALL])
-    val positions: Set<OrderPosition> = positions.flatMap {
+    val positions: MutableSet<OrderPosition> = positions.flatMap {
         val mapped = mutableSetOf<OrderPosition>()
         for (i in 1 .. it.count) {
             mapped.add(OrderPosition(
@@ -58,7 +58,7 @@ class Order(
             ))
         }
         mapped
-    }.toSet()
+    }.toMutableSet()
 
     fun changePrice(price: Double) {
         this.price = price
@@ -71,24 +71,29 @@ class Order(
         registerEvent(OrderRemoved(id))
     }
 
+    fun cancelPosition(orderPosition: OrderPosition, personId: String) {
+        positions.remove(orderPosition)
+        registerEvent(PositionCancelled(personId, id, orderPosition.id))
+    }
+
     private fun findPositionInOrder(positionId: String) = positions.find { it.id == positionId }!!
 
     fun startPositionPreparing(positionId: String) {
         val position = findPositionInOrder(positionId)
         position.orderStatus = OrderStatus.PREPARING
-        registerEvent(PositionStartPreparing(id, position.id))
+        registerEvent(PositionStartPreparing(personId, id, position.id))
     }
 
     fun preparePosition(positionId: String) {
         val position = findPositionInOrder(positionId)
         position.orderStatus = OrderStatus.DELIVERING
-        registerEvent(PositionDone(id, position.id))
+        registerEvent(PositionDone(personId, id, position.id))
     }
 
     fun deliverPosition(positionId: String) {
         val position = findPositionInOrder(positionId)
         position.orderStatus = OrderStatus.COMPLETED
-        registerEvent(PositionDelivered(id, position.id))
+        registerEvent(PositionDelivered(personId, id, position.id))
         if (positions.all { it.orderStatus == OrderStatus.COMPLETED }) {
             closed = true
             closeCause = CloseCause.COMPLETED
