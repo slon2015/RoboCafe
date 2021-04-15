@@ -1,6 +1,6 @@
 package com.robocafe.all.application.handlers.models
 
-import com.robocafe.all.domain.models.OutboundMember
+import com.robocafe.core.domain.models.OutboundMember
 
 data class StartChatModel(val members: Set<OutboundMember>, val chatName: String)
 class OutboundChatInfo(val chatId: String,

@@ -1,10 +1,10 @@
 package com.robocafe.all.application.utils
 
 import com.robocafe.all.application.handlers.models.OutboundMessageInfo
-import com.robocafe.all.domain.models.ChatMemberInfo
-import com.robocafe.all.domain.models.DetalizedChatMemberInfo
-import com.robocafe.all.domain.models.MessageInfo
-import com.robocafe.all.domain.models.OutboundMember
+import com.robocafe.core.domain.models.ChatMemberInfo
+import com.robocafe.core.domain.models.DetalizedChatMemberInfo
+import com.robocafe.core.domain.models.MessageInfo
+import com.robocafe.core.domain.models.OutboundMember
 import com.robocafe.all.session.SessionService
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Component

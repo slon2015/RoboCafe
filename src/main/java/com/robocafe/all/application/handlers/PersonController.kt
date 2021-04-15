@@ -5,8 +5,8 @@ import com.robocafe.all.application.handlers.models.*
 import com.robocafe.all.application.services.OrderAuthorData
 import com.robocafe.all.application.services.OrderInfo
 import com.robocafe.all.application.utils.ChatUtils
-import com.robocafe.all.domain.models.ChatInfo
-import com.robocafe.all.domain.models.ChatMemberInfo
+import com.robocafe.core.domain.models.ChatInfo
+import com.robocafe.core.domain.models.ChatMemberInfo
 import com.robocafe.all.session.SessionService
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.security.core.Authentication

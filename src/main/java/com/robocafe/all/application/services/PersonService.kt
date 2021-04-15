@@ -1,7 +1,7 @@
 package com.robocafe.all.application.services
 
-import com.robocafe.all.application.repositories.PersonRepository
-import com.robocafe.all.domain.models.PartyScopedPersonInfo
+import com.robocafe.core.repositories.PersonRepository
+import com.robocafe.core.domain.models.PartyScopedPersonInfo
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 

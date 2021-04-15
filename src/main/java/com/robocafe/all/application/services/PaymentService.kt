@@ -1,8 +1,8 @@
 package com.robocafe.all.application.services
 
-import com.robocafe.all.application.repositories.PaymentRepository
-import com.robocafe.all.domain.Payment
-import com.robocafe.all.domain.PaymentStatus
+import com.robocafe.core.repositories.PaymentRepository
+import com.robocafe.core.domain.Payment
+import com.robocafe.core.domain.PaymentStatus
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
@@ -72,7 +72,7 @@ class PaymentService @Autowired constructor(
         paymentRepository.save(this)
     }
 
-    private fun findPayment(paymentId: String) =
+    private fun findPayment(paymentId: String): Payment =
             paymentRepository.findById(paymentId).orElseThrow { PaymentNotFound() }
 
     fun officiantMovedOutForPayment(paymentId: String) {
@@ -117,12 +117,14 @@ class PaymentService @Autowired constructor(
 
     fun getConfirmedPaymentsAmountForPerson(personId: String) =
             paymentRepository.findAllByPersonIdAndStatusEqualsConfirmed(personId)
-                    .map { it.amount }.sum()
+                    .map<Payment, Double> { it.amount }.sum()
     fun getConfirmedPaymentsAmountForParty(partyId: String) =
             paymentRepository.findAllByPartyIdAndStatusEqualsConfirmed(partyId)
-                    .map { it.amount }.sum()
+                    .map<Payment, Double> { it.amount }.sum()
     fun getPayment(paymentId: String) = PaymentInfo(findPayment(paymentId))
-    fun getActivePayments() = paymentRepository.findAllActivePayments().map { PaymentInfo(it) }.toSet()
+    fun getActivePayments() = paymentRepository.findAllActivePayments()
+            .map<Payment, PaymentInfo> { PaymentInfo(it) }.toSet()
     fun getActivePaymentsForParty(partyId: String) =
-            paymentRepository.findAllActivePaymentsByPartyId(partyId).map { PaymentInfo(it) }.toSet()
+            paymentRepository.findAllActivePaymentsByPartyId(partyId)
+                    .map<Payment, PaymentInfo> { PaymentInfo(it) }.toSet()
 }

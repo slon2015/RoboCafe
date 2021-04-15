@@ -1,13 +1,13 @@
 package com.robocafe.all.application.services
 
-import com.robocafe.all.application.repositories.ChatRepository
-import com.robocafe.all.application.repositories.MessageRepository
-import com.robocafe.all.domain.Chat
-import com.robocafe.all.domain.ChatMember
-import com.robocafe.all.domain.Message
-import com.robocafe.all.domain.models.ChatInfo
-import com.robocafe.all.domain.models.ChatMemberInfo
-import com.robocafe.all.domain.models.DetalizedChatMemberInfo
+import com.robocafe.core.repositories.ChatRepository
+import com.robocafe.core.repositories.MessageRepository
+import com.robocafe.core.domain.Chat
+import com.robocafe.core.domain.ChatMember
+import com.robocafe.core.domain.Message
+import com.robocafe.core.domain.models.ChatInfo
+import com.robocafe.core.domain.models.ChatMemberInfo
+import com.robocafe.core.domain.models.DetalizedChatMemberInfo
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
@@ -28,7 +28,8 @@ class ChatService @Autowired constructor(
     }
 
     fun getChatsFor(chatMemberId: ChatMemberInfo): Set<ChatInfo> {
-        return chatRepository.findByMembersContains(ChatMember(chatMemberId)).map { ChatInfo(it) }.toSet()
+        return chatRepository.findByMembersContains(ChatMember(chatMemberId))
+                .map<Chat, ChatInfo> { ChatInfo(it) }.toSet()
     }
 
     private fun getChat(chatId: String): Chat {

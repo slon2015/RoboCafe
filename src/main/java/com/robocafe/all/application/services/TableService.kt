@@ -1,8 +1,8 @@
 package com.robocafe.all.application.services
 
-import com.robocafe.all.application.repositories.TableRepository
-import com.robocafe.all.domain.Table
-import com.robocafe.all.domain.models.TableInfo
+import com.robocafe.core.repositories.TableRepository
+import com.robocafe.core.domain.Table
+import com.robocafe.core.domain.models.TableInfo
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
@@ -45,7 +45,8 @@ class TableService @Autowired constructor(private val repository: TableRepositor
     }
 
     fun getAllTablesInfo(): Set<TableInfo> {
-        return repository.findAll().map { TableInfo(it) }.toSet()
+        return repository.findAll()
+                .map<Table, TableInfo> { TableInfo(it) }.toSet()
     }
 
     fun getTableByNumber(tableNum: Int): TableInfo {

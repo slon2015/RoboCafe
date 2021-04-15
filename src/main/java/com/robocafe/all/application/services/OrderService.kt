@@ -1,8 +1,8 @@
 package com.robocafe.all.application.services
 
-import com.robocafe.all.application.repositories.OrderPositionRepository
-import com.robocafe.all.application.repositories.OrderRepository
-import com.robocafe.all.domain.*
+import com.robocafe.core.repositories.OrderPositionRepository
+import com.robocafe.core.repositories.OrderRepository
+import com.robocafe.core.domain.*
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
@@ -85,9 +85,9 @@ class OrderService @Autowired constructor(
         }
     }
 
-    private fun findOrder(orderId: String) =
+    private fun findOrder(orderId: String): Order =
             orderRepository.findById(orderId).orElseThrow { OrderNotFound() }
-    private fun findPosition(positionId: String) =
+    private fun findPosition(positionId: String): OrderPosition =
             orderPositionRepository.findById(positionId).orElseThrow { PositionNotFound() }
 
     fun getOrder(orderId: String) = OrderInfo(findOrder(orderId))
@@ -110,11 +110,11 @@ class OrderService @Autowired constructor(
 
     fun getBalanceForParty(partyId: String) =
             orderRepository.findAllByPartyId(partyId)
-                    .map { it.price }.sum()
+                    .map<Order, Double> { it.price }.sum()
 
     fun getBalanceForPerson(personId: String) =
             orderRepository.findAllByPersonId(personId)
-                    .map { it.price }.sum()
+                    .map<Order, Double> { it.price }.sum()
 
 
 
@@ -170,22 +170,23 @@ class OrderService @Autowired constructor(
         }
     }
 
-    fun getOpenOrders() = orderRepository.findAllByClosedIsFalse().map { OrderInfo(it) }.toSet()
+    fun getOpenOrders() = orderRepository.findAllByClosedIsFalse()
+            .map<Order, OrderInfo> { OrderInfo(it) }.toSet()
     fun getPositionsForOrderThatWaitsForPreparing(orderId: String) =
             orderPositionRepository.findAllByOrderIdAndOrderStatusEqualsWaiting(orderId)
-                    .map { OrderPositionInfo(it) }.toSet()
+                    .map<OrderPosition, OrderPositionInfo> { OrderPositionInfo(it) }.toSet()
     fun getPositionsOnPreparingStage() =
             orderPositionRepository.findAllByOrderStatusEqualsPreparing()
-                    .map { OrderPositionInfo(it) }.toSet()
+                    .map<OrderPosition, OrderPositionInfo> { OrderPositionInfo(it) }.toSet()
     fun getPositionsOnDeliveringStage() =
             orderPositionRepository.findAllByOrderStatusEqualsDelivering()
-                    .map { OrderPositionInfo(it) }.toSet()
+                    .map<OrderPosition, OrderPositionInfo> { OrderPositionInfo(it) }.toSet()
     fun getOpenOrdersForParty(partyId: String): Set<OrderInfo> =
             orderRepository.findAllByPartyIdAndClosedIsFalse(partyId)
-                    .map { OrderInfo(it) }.toSet()
+                    .map<Order, OrderInfo> { OrderInfo(it) }.toSet()
     fun getOpenOrdersForPerson(personId: String) =
             orderRepository.findAllByPersonIdAndClosedIsFalse(personId)
-                    .map { OrderInfo(it) }.toSet()
+                    .map<Order, OrderInfo> { OrderInfo(it) }.toSet()
 
 }
 

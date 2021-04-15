@@ -73,13 +73,16 @@ allprojects.flatMap { it.tasks }.filterIsInstance<BootBuildImage>().forEach {
     }
 }
 
-tasks.register("createAllConfigMap") {
+task("createAllConfigMap") {
     group = "setup"
-    kubectl.exec {
-        commandLine = listOf("kubectl","delete","configmap","robocafeall")
-        isIgnoreExitValue = true
+
+    doLast {
+        kubectl.exec {
+            commandLine = listOf("kubectl","delete","configmap","robocafeall")
+            isIgnoreExitValue = true
+        }
+        kubectl.exec("create configmap robocafeall --from-file=./all/config.yml")
     }
-    kubectl.exec("create configmap robocafeall --from-file=./all/config.yml")
 }
 
 tasks.getByName("helmInstall") {

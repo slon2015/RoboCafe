@@ -1,12 +1,12 @@
 package com.robocafe.all.application.services
 
 import org.springframework.beans.factory.annotation.Autowired
-import com.robocafe.all.application.repositories.PartyRepository
+import com.robocafe.core.repositories.PartyRepository
 import kotlin.Throws
-import com.robocafe.all.domain.Party
-import com.robocafe.all.domain.Person
-import com.robocafe.all.domain.models.PartyScopedPersonInfo
-import com.robocafe.all.domain.models.TableInfo
+import com.robocafe.core.domain.Party
+import com.robocafe.core.domain.Person
+import com.robocafe.core.domain.models.PartyScopedPersonInfo
+import com.robocafe.core.domain.models.TableInfo
 import org.springframework.stereotype.Service
 import java.time.Instant
 

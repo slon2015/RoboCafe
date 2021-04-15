@@ -3,8 +3,8 @@ package com.robocafe.all.application.handlers
 import com.robocafe.all.application.handlers.models.PaymentStatusChangeModel
 import com.robocafe.all.application.security.SecurityService
 import com.robocafe.all.application.services.*
-import com.robocafe.all.domain.PaymentStatus
-import com.robocafe.all.domain.models.TableInfo
+import com.robocafe.core.domain.PaymentStatus
+import com.robocafe.core.domain.models.TableInfo
 import com.robocafe.all.session.SessionService
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.transaction.annotation.Transactional

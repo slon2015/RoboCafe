@@ -2,7 +2,7 @@ package com.robocafe.all.application.handlers.models
 
 import com.robocafe.all.application.services.OrderInfo
 import com.robocafe.all.application.services.PaymentInfo
-import com.robocafe.all.domain.TableStatus
+import com.robocafe.core.domain.TableStatus
 import com.robocafe.all.hallscheme.HallState
 
 data class RegisterTable(val tableNum: Int, val tableMaxPersons: Int)
