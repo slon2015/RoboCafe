@@ -62,7 +62,7 @@ class Table(val webDriver: WebDriver, val tableNum: Int) {
         }
         try {
             val panelElement = webDriver.findElement(
-                    By.xpath("//*[@id=\"root\"]/div[${personNum}]")
+                    By.id("$personNum-person-panel")
             )
             return MainPanel(panelElement, personNum)
         }
